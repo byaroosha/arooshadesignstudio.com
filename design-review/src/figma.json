@@ -1,0 +1,819 @@
+{
+ "fileKey": "zdCMfKcZRcBF0gvQ8ff811",
+ "sections": [
+  {
+   "id": "1:2906",
+   "name": "Action - Renew Program",
+   "status": "design complete",
+   "ticket": "Jira Ticket (DQP-#####)",
+   "flows": [
+    {
+     "id": "1:2908",
+     "name": "Clinic Draw - Renew",
+     "status": "DONE",
+     "x": 340,
+     "y": 481
+    },
+    {
+     "id": "1:2909",
+     "name": "Quest Draw - Renew",
+     "status": "DONE",
+     "x": 340,
+     "y": 6361
+    }
+   ],
+   "labels": [
+    {
+     "id": "1:2910",
+     "text": "Renew Program",
+     "x": 340,
+     "y": 1006
+    },
+    {
+     "id": "1:2911",
+     "text": "Renew Program for IOP/PSC and Mobile Phleb",
+     "x": 340,
+     "y": 6886
+    },
+    {
+     "id": "1:2912",
+     "text": "Modify Information",
+     "x": 10588,
+     "y": 1006
+    }
+   ],
+   "notes": [
+    {
+     "id": "1:6666",
+     "x": 201,
+     "y": 1425,
+     "w": 624,
+     "h": 314,
+     "kind": "Design Insight",
+     "text": "“Renew Program” should only be available when the Draw Status badge has the text “Program renewal available” below it."
+    },
+    {
+     "id": "1:7058",
+     "x": 3344,
+     "y": 509,
+     "w": 624,
+     "h": 410,
+     "kind": "Design Insight",
+     "text": "When the user clicks the “Renew Program” overflow action, a side sheet will appear with a quickview of a subset of fields from the initial order page. We will carry over the previous program information to make it easier for the user since most of the details won’t need to be changed."
+    },
+    {
+     "id": "1:7059",
+     "x": 1751,
+     "y": 6325,
+     "w": 624,
+     "h": 474,
+     "kind": "Design Insight",
+     "text": "When it’s the last draw in a monitoring program that is being collected by Quest (PSC/IOP or Mobile Phlebotomy), the text “Program renewal available” will appear below the Draw Status badge. This will highlight to the user that the program will be completing soon to prompt renewal. The overflow menu should have the “Renew Program” action available, which would be the same functionality as renewing for a clinic order."
+    },
+    {
+     "id": "1:7060",
+     "x": 3344,
+     "y": 6485,
+     "w": 624,
+     "h": 314,
+     "kind": "Design Insight",
+     "text": "The “Renew MRD Program” sidesheet should function the same as currently outlined above for renewing the program or modifying the information."
+    },
+    {
+     "id": "1:7061",
+     "x": 9024,
+     "y": 461,
+     "w": 624,
+     "h": 458,
+     "kind": "Design Insight",
+     "text": "Once the user clicks “Submit” and the side sheet closes, the following will occur:\nConfirmation toast message will be displayed.\n“Program Renewal Available” below the Draw Status will be removed since renewal was completed.\nNew program orders should now appear on the Orders tab and the patient’s profile."
+    },
+    {
+     "id": "1:7062",
+     "x": 4245,
+     "y": 573,
+     "w": 624,
+     "h": 346,
+     "kind": "Design Insight",
+     "text": "The suggested draw schedule will automatically populate for the user using the last draw in the current series and the selected frequency. The user can any of the individual draws if needed."
+    },
+    {
+     "id": "1:7063",
+     "x": 4245,
+     "y": 76,
+     "w": 624,
+     "h": 410,
+     "kind": "Design Insight",
+     "text": "The Business changed their minds and now want an update to the draw schedule. If the user changes the date for Draw 1, it should automatically update the subsequent draws based off the frequency and the new date. This will only apply to the first draw. If they make changes to any other draws, it won’t affect the others."
+    },
+    {
+     "id": "1:7064",
+     "x": 7431,
+     "y": 509,
+     "w": 624,
+     "h": 410,
+     "kind": "Design Insight",
+     "text": "The user needs to make 2 selections in order to activate the “Submit” button: Diagnosis and Statement of Medical Necessity e-signature. They can adjust the pre-populated information (frequency, draw schedule or where the draw will be performed by) if needed, but these would be optional actions."
+    },
+    {
+     "id": "1:7486",
+     "x": 15459,
+     "y": 413,
+     "w": 624,
+     "h": 506,
+     "kind": "Design Insight",
+     "text": "On the Success page once a user has successfully renewed a patient’s program, clicking the “Close” button should direct them back to the Monitoring To-Do’s tab.\nThe following should occur upon a successful submit:\n“Program Renewal Available” below the Draw Status will be removed since renewal was completed.\nNew program orders should now appear on the Orders tab and the patient’s profile."
+    },
+    {
+     "id": "1:7487",
+     "x": 12872,
+     "y": 173,
+     "w": 624,
+     "h": 746,
+     "kind": "Design Insight",
+     "text": "If the user selects “Modify Information” from the sidesheet quickview, they will be directed to the full ordering page with all the information pre-populated from the previous program as well as any additional selections made from the sidesheet.\nThis page will be more concise, focusing on MRD and program level fields. The following changes will display:\nTitle of the page will update to “Monitoring Program Renewal”\nOnly show the MRD test group → Remove all others\nShow Monitoring test/code as read-only text\nRemove the “Single Test” option under Monitoring Frequency\nRemove “Save as Draft” button\nRest of the ordering workflow should function as normal."
+    },
+    {
+     "id": "1:7488",
+     "x": 13592,
+     "y": 573,
+     "w": 624,
+     "h": 346,
+     "kind": "Design Insight",
+     "text": "If the user decides to cancel out of the renewal ordering full page instead of submitting, they will be directed back to the Monitoring To-Do’s tab. No change will be made to that particular draw for the patient."
+    }
+   ],
+   "screens": [
+    {
+     "id": "1:2913",
+     "name": "Renew Program - Click Overflow Option",
+     "x": 935,
+     "y": 1006,
+     "w": 1440,
+     "h": 1132
+    },
+    {
+     "id": "1:3317",
+     "name": "Renew Program (Quest Draw) - Click Overflow Option",
+     "x": 935,
+     "y": 6886,
+     "w": 1440,
+     "h": 1132
+    },
+    {
+     "id": "1:3724",
+     "name": "Modify (Renew) - Click Button",
+     "x": 11183,
+     "y": 1006,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:4256",
+     "name": "Renew Program Sidesheet",
+     "x": 2528,
+     "y": 1006,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:4781",
+     "name": "Renew Program (Quest Draw) Sidesheet",
+     "x": 2528,
+     "y": 6886,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:5313",
+     "name": "Renew Program Sidesheet (Full View) - Click Submit",
+     "x": 6615,
+     "y": 1006,
+     "w": 1440,
+     "h": 1832
+    },
+    {
+     "id": "1:5849",
+     "name": "Renew Program Sidesheet (Full View) - Click E-Sign",
+     "x": 5022,
+     "y": 1006,
+     "w": 1440,
+     "h": 1832
+    },
+    {
+     "id": "1:6385",
+     "name": "Renew Program Sidesheet (Full View) - Select Diagnosis",
+     "x": 4043,
+     "y": 1006,
+     "w": 826,
+     "h": 1676
+    },
+    {
+     "id": "1:6521",
+     "name": "Renew Program (Quest Draw) Sidesheet (Full)",
+     "x": 4043,
+     "y": 6886,
+     "w": 826,
+     "h": 1773
+    },
+    {
+     "id": "1:6667",
+     "name": "Renew Program Sidesheet - Confirmation Toast",
+     "x": 8208,
+     "y": 1006,
+     "w": 1440,
+     "h": 1132
+    },
+    {
+     "id": "1:7065",
+     "name": "Modify (Renew) - Renewal Ordering Page",
+     "x": 12776,
+     "y": 1006,
+     "w": 1440,
+     "h": 3154
+    },
+    {
+     "id": "1:7386",
+     "name": "Modify (Renew) - Success Page",
+     "x": 14643,
+     "y": 1006,
+     "w": 1440,
+     "h": 1008
+    }
+   ],
+   "y": 19359
+  },
+  {
+   "id": "1:7490",
+   "name": "Action - Schedule and Renew",
+   "status": "design complete",
+   "ticket": "Jira Ticket (DQP-#####)",
+   "flows": [
+    {
+     "id": "1:7492",
+     "name": "Schedule Last Draw",
+     "status": "DONE",
+     "x": 340,
+     "y": 481
+    },
+    {
+     "id": "1:7493",
+     "name": "Cancel Last Draw",
+     "status": "DONE",
+     "x": 340,
+     "y": 5223
+    },
+    {
+     "id": "1:7494",
+     "name": "Modify Information",
+     "status": "DONE",
+     "x": 340,
+     "y": 10028
+    },
+    {
+     "id": "1:7495",
+     "name": "Other Formatting",
+     "status": "DONE",
+     "x": 14803,
+     "y": 10028
+    }
+   ],
+   "labels": [
+    {
+     "id": "1:7496",
+     "text": "Schedule Last Draw and Renew Program",
+     "x": 340,
+     "y": 1006
+    },
+    {
+     "id": "1:7497",
+     "text": "Schedule Last Draw Only, No Renewal",
+     "x": 13762,
+     "y": 1006
+    },
+    {
+     "id": "1:7498",
+     "text": "Cancel Last Draw and Renew Program",
+     "x": 340,
+     "y": 5748
+    },
+    {
+     "id": "1:7499",
+     "text": "Cancel Last Draw Only, No Renewal",
+     "x": 13147,
+     "y": 5748
+    },
+    {
+     "id": "1:7500",
+     "text": "Modify - Schedule Last Draw",
+     "x": 340,
+     "y": 10553
+    },
+    {
+     "id": "1:8083",
+     "text": "Modify - Cancel Last Draw",
+     "x": 6775,
+     "y": 10553
+    },
+    {
+     "id": "1:7501",
+     "text": "Limit to Diagnosis Search Results",
+     "x": 14803,
+     "y": 10553
+    }
+   ],
+   "notes": [
+    {
+     "id": "1:13748",
+     "x": 201,
+     "y": 1547,
+     "w": 624,
+     "h": 282,
+     "kind": "Design Insight",
+     "text": "“Mark Scheduled and Renew” should only be available for the “Schedule and Renew” badge."
+    },
+    {
+     "id": "1:17427",
+     "x": 12211,
+     "y": 365,
+     "w": 624,
+     "h": 554,
+     "kind": "Design Insight",
+     "text": "Once the user clicks “Submit” and the side sheet closes, the following will occur:\nConfirmation toast message will be displayed.\nBadge updates to “Draw Scheduled” with the corresponding overflow menu of actions.\nIf the “Date of Collection” was updated, this change needs to be reflected in the table and other tabs (if applicable).\nNew program orders should now appear on the Orders tab and the patient’s profile."
+    },
+    {
+     "id": "1:17428",
+     "x": 11583,
+     "y": 5075,
+     "w": 624,
+     "h": 586,
+     "kind": "Design Insight",
+     "text": "Once the user clicks “Submit” and the side sheet closes, the following will occur:\nConfirmation toast message will be displayed.\nRow for the patient will be removed from the table since the draw was canceled. The canceled draw should also be removed in other tabs (if applicable) and patient’s profile.\nTab count and table pagination should update.\nNew program orders for the renewal should now appear on the Orders tab, Monitoring To-Do’s (if within the next 30 days) and the patient’s profile."
+    },
+    {
+     "id": "1:17429",
+     "x": 17744,
+     "y": 5075,
+     "w": 624,
+     "h": 586,
+     "kind": "Design Insight",
+     "text": "Once the user clicks “Submit” and the side sheet closes, the following will occur:\nConfirmation toast message will be displayed.\nRow for the patient will be removed from the table since the draw was canceled. The canceled draw should also be removed in other tabs (if applicable) and patient’s profile.\nTab count and table pagination should update.\nSince the program has completed without renewal, the patient will be listed under the “Show Completed Programs Ready for Renewal” checkbox."
+    },
+    {
+     "id": "1:17430",
+     "x": 16214,
+     "y": 9912,
+     "w": 624,
+     "h": 554,
+     "kind": "Design Insight",
+     "text": "On the full ordering page, searching for a diagnosis displays 30 results, which would take up a lot of space and require more scrolling in the sidesheet, due to the smaller size. Because of this, we should limit the search results to 10 in this quickview, so the whole card can fit without scrolling and to minimize the height.\nThe Business mentioned the diagnosis should most likely stay the same, so generally they wouldn’t have to look for something else, but good to build out for those users who happen to update it."
+    },
+    {
+     "id": "1:17431",
+     "x": 3344,
+     "y": 365,
+     "w": 624,
+     "h": 554,
+     "kind": "Design Insight",
+     "text": "The Draw Preference field by default will be pre-selected with the “Mark the last draw as scheduled” option. When this is selected, there will be a nested field of “Date of Collection” which is pre-populated with the current scheduled date, which is found under the “Upcoming Draw” column in the table.\nBecause this schedules the last draw in the program, the date can be changed as long as it’s within one year from the program’s start date. Any days after should be disabled in the datepipcker."
+    },
+    {
+     "id": "1:17432",
+     "x": 4937,
+     "y": 429,
+     "w": 624,
+     "h": 490,
+     "kind": "Design Insight",
+     "text": "When the user clicks “Continue”, the stepper will advance to Step 2, which is Renew Program. The first step will now have a checkmark in place of a number and since they selected to mark the last draw as scheduled, the date of collection (MM/DD/YYYY) should appear below the “Schedule Last Draw” title.\nA back arrow will be added to the header, so the user can go back to the first step if needed."
+    },
+    {
+     "id": "1:17433",
+     "x": 7402,
+     "y": 5203,
+     "w": 624,
+     "h": 458,
+     "kind": "Design Insight",
+     "text": "When the user clicks “Continue”, the stepper will advance to Step 2, which is Renew Program. The first step will now have a checkmark in place of a number and since they selected to cancel the last draw, we will say “Cancel” below the “Schedule Last Draw” title.\nA back arrow will be added to the header, so the user can go back to the first step if needed."
+    },
+    {
+     "id": "1:17434",
+     "x": 8123,
+     "y": 5267,
+     "w": 624,
+     "h": 394,
+     "kind": "Design Insight",
+     "text": "Once on the renewal step, the same flow will take place as defined previously under Schedule Last Draw and Renew Program.\nThe only change is the verbiage in the yellow alert message is updated to reflect the cancel action."
+    },
+    {
+     "id": "1:17435",
+     "x": 6530,
+     "y": 573,
+     "w": 624,
+     "h": 346,
+     "kind": "Design Insight",
+     "text": "Any changes the user makes to the renew program section should be retained if they happen to toggle between the Yes/No options for the “Do you want to renew the MRD program for this patient?” field."
+    },
+    {
+     "id": "1:17436",
+     "x": 5810,
+     "y": 429,
+     "w": 624,
+     "h": 490,
+     "kind": "Design Insight",
+     "text": "If the user selects to renew the program for the patient, then all the renewal fields will appear in card format to help segment the information as well as due to how the current Diagnosis component is built. The order of the fields should follow the hierarchy on the order page.\nThe buttons at the bottom will update, adding an additional button of “Modify Information” since it’s needed as part of the renewal flow."
+    },
+    {
+     "id": "1:17437",
+     "x": 10618,
+     "y": 509,
+     "w": 624,
+     "h": 410,
+     "kind": "Design Insight",
+     "text": "The user needs to make 2 selections in order to activate the “Submit” button: Diagnosis and Statement of Medical Necessity e-signature. They can adjust the pre-populated information (frequency, draw schedule or where the draw will be performed by) if needed, but these would be optional actions."
+    },
+    {
+     "id": "1:17438",
+     "x": 2624,
+     "y": 301,
+     "w": 624,
+     "h": 618,
+     "kind": "Design Insight",
+     "text": "When the user clicks “Mark Scheduled and Renew”, a side sheet will appear with the same fields from the Mark Scheduled and Renew flows as we need the user to indicate the last draw appointment was set up as well as prompt for renewal.\nSince there can be a lot of fields, implemented a guided workflow to segment the information into steps, so they can focus on one action a time. First they will decide if they want to schedule the last draw or cancel, since the date can only be changed within one-year from the program’s start date. Then they move on to the renewal prompt, which is optional."
+    },
+    {
+     "id": "1:17439",
+     "x": 7432,
+     "y": 573,
+     "w": 624,
+     "h": 346,
+     "kind": "Design Insight",
+     "text": "The suggested draw schedule will automatically populate for the user using the last draw in the current series and the selected frequency. The user can any of the individual draws if needed."
+    },
+    {
+     "id": "1:17849",
+     "x": 18359,
+     "y": 365,
+     "w": 624,
+     "h": 554,
+     "kind": "Design Insight",
+     "text": "Once the user clicks “Submit” and the side sheet closes, the following will occur:\nConfirmation toast message will be displayed.\nBadge updates to “Draw Scheduled” with adding “Program renewal available” below it, to give visual indication on the table that renewing is available.\nThe overflow menu should have an option to renew.\nIf the “Date of Collection” was updated, this change needs to be reflected in the table and other tabs (if applicable)."
+    },
+    {
+     "id": "1:17850",
+     "x": 16766,
+     "y": 605,
+     "w": 624,
+     "h": 314,
+     "kind": "Design Insight",
+     "text": "If the user selects “No, don’t renew”, the “Submit” button will activate. The yellow alert message will remain on the page in the effort to subtly prompt the user to renew."
+    },
+    {
+     "id": "1:19267",
+     "x": 5211,
+     "y": 9864,
+     "w": 624,
+     "h": 602,
+     "kind": "Design Insight",
+     "text": "On the Success page once a user has successfully renewed a patient’s program, clicking the “Close” button should direct them back to the Monitoring To-Do’s tab.\nThe following should occur upon a successful submit:\nBadge updates to “Draw Scheduled” with the corresponding overflow menu of actions.\nIf the “Date of Collection” was updated, this change needs to be reflected in the table and other tabs (if applicable).\nNew program orders should now appear on the Orders tab and the patient’s profile."
+    },
+    {
+     "id": "1:19268",
+     "x": 11646,
+     "y": 9864,
+     "w": 624,
+     "h": 602,
+     "kind": "Design Insight",
+     "text": "On the Success page once a user has successfully renewed a patient’s program, clicking the “Close” button should direct them back to the Monitoring To-Do’s tab.\nThe following should occur upon a successful submit:\nRow for the patient will be removed from the table since the draw was canceled. The canceled draw should be reflected in other tabs (if applicable) and patient’s profile.\nNew program orders for the renewal should now appear on the Orders tab, Monitoring To-Do’s (if within the next 30 days) and the patient’s profile."
+    },
+    {
+     "id": "1:19269",
+     "x": 2624,
+     "y": 9576,
+     "w": 624,
+     "h": 890,
+     "kind": "Design Insight",
+     "text": "If the user selects “Modify Information” from the sidesheet quickview, they will be directed to the full ordering page with all the information pre-populated from the previous program as well as any additional selections made from the sidesheet.\nThe last monitoring draw will NOT be scheduled until the renewal is submitted on the ordering page.\nThis page will be more concise, focusing on MRD and program level fields. The following changes will display:\nTitle of the page will update to “Monitoring Program Renewal”\nOnly show the MRD test group → Remove all others\nShow Monitoring test/code as read-only text\nRemove the “Single Test” option under Monitoring Frequency\nRemove “Save as Draft” button since we need the user to complete the renewal flow to either schedule or cancel the last program draw.\nRest of the ordering workflow should function as normal."
+    },
+    {
+     "id": "1:19270",
+     "x": 9059,
+     "y": 9576,
+     "w": 624,
+     "h": 890,
+     "kind": "Design Insight",
+     "text": "If the user selects “Modify Information” from the sidesheet quickview, they will be directed to the full ordering page with all the information pre-populated from the previous program as well as any additional selections made from the sidesheet.\nThe last monitoring draw will NOT be scheduled until the renewal is submitted on the ordering page.\nThis page will be more concise, focusing on MRD and program level fields. The following changes will display:\nTitle of the page will update to “Monitoring Program Renewal”\nOnly show the MRD test group → Remove all others\nShow Monitoring test/code as read-only text\nRemove the “Single Test” option under Monitoring Frequency\nRemove “Save as Draft” button since we need the user to complete the renewal flow to either schedule or cancel the last program draw.\nRest of the ordering workflow should function as normal."
+    },
+    {
+     "id": "1:19271",
+     "x": 3344,
+     "y": 10056,
+     "w": 624,
+     "h": 410,
+     "kind": "Design Insight",
+     "text": "If the user decides to cancel out of the renewal ordering full page instead of submitting, they will be directed back to the Monitoring To-Do’s tab. No change will be made to that particular draw for the patient and the badge will still remain as “Schedule Draw” since the action hadn’t been fully completed."
+    },
+    {
+     "id": "1:19272",
+     "x": 3344,
+     "y": 9591,
+     "w": 624,
+     "h": 378,
+     "kind": "Design Insight",
+     "text": "If the user hadn’t entered a start date while on the Mark Scheduled and Renew sidesheet, then the same functionality around making the user select a value for Draw 1 before populating the rest of the draw schedule would apply on this order page."
+    },
+    {
+     "id": "1:19273",
+     "x": 9779,
+     "y": 9591,
+     "w": 624,
+     "h": 378,
+     "kind": "Design Insight",
+     "text": "If the user hadn’t entered a start date while on the Mark Scheduled and Renew sidesheet, then the same functionality around making the user select a value for Draw 1 before populating the rest of the draw schedule would apply on this order page."
+    },
+    {
+     "id": "1:19274",
+     "x": 9779,
+     "y": 10056,
+     "w": 624,
+     "h": 410,
+     "kind": "Design Insight",
+     "text": "If the user decides to cancel out of the renewal ordering full page instead of submitting, they will be directed back to the Monitoring To-Do’s tab. No change will be made to that particular draw for the patient and the badge will still remain as “Schedule Draw” since the action hadn’t been fully completed."
+    },
+    {
+     "id": "1:19275",
+     "x": 7432,
+     "y": 76,
+     "w": 624,
+     "h": 410,
+     "kind": "Design Insight",
+     "text": "The Business changed their minds and now want an update to the draw schedule. If the user changes the date for Draw 1, it should automatically update the subsequent draws based off the frequency and the new date. This will only apply to the first draw. If they make changes to any other draws, it won’t affect the others."
+    },
+    {
+     "id": "1:19476",
+     "x": 16151,
+     "y": 5347,
+     "w": 624,
+     "h": 314,
+     "kind": "Design Insight",
+     "text": "If the user selects “No, don’t renew”, the “Submit” button will activate. The yellow alert message will remain on the page in the effort to subtly prompt the user to renew."
+    },
+    {
+     "id": "1:19477",
+     "x": 1343,
+     "y": 453,
+     "w": 624,
+     "h": 314,
+     "kind": "Flow Update",
+     "date": "2026-10-26",
+     "text": "Decided w/ team that we will automatically pre-populate the draw schedule for the user so they don’t have to do the math themselves by figuring out a start date."
+    },
+    {
+     "id": "1:19478",
+     "x": 3344,
+     "y": 5139,
+     "w": 624,
+     "h": 522,
+     "kind": "Design Insight",
+     "text": "When the user selects to cancel the last draw:\nThe “Date of Collection” field will disappear from the screen, since it’s tied to the “Mark the last draw as scheduled” option.\nThe “Select reason for cancellation” field will now appear under the “Cancel the last draw” option. This is current functionality for canceling an order.\nThe “Continue” button will be disabled until a reason is selected by the user."
+    },
+    {
+     "id": "1:19480",
+     "x": 6530,
+     "y": 140,
+     "w": 624,
+     "h": 346,
+     "kind": "Note",
+     "date": "2026-11-02",
+     "text": "Due to feedback from Compliance, we can present the most recently used diagnosis, but the user has to make the selection themselves, instead of the system automatically selecting it for them."
+    }
+   ],
+   "screens": [
+    {
+     "id": "1:7502",
+     "name": "Limit Diagnosis Search Results",
+     "x": 15398,
+     "y": 10553,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:8084",
+     "name": "Schedule and Renew - Click Overflow Option",
+     "x": 935,
+     "y": 1006,
+     "w": 1440,
+     "h": 1132
+    },
+    {
+     "id": "1:8486",
+     "name": "Schedule, No Renew - Step 2",
+     "x": 14357,
+     "y": 1006,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:8939",
+     "name": "Cancel and Renew - Select Cancel Draw",
+     "x": 935,
+     "y": 5748,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:9420",
+     "name": "Cancel, No Renew - Step 2",
+     "x": 13742,
+     "y": 5748,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:9874",
+     "name": "Modify (Schedule Last Draw) - Click Button",
+     "x": 935,
+     "y": 10553,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:10416",
+     "name": "Modify (Cancel Last Draw) - Click Button",
+     "x": 7370,
+     "y": 10553,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:10958",
+     "name": "Cancel, No Renew - Click Submit",
+     "x": 15335,
+     "y": 5748,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:11412",
+     "name": "Cancel and Renew - Click Select Reason for Cancellation Dropdown",
+     "x": 2528,
+     "y": 5748,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:11887",
+     "name": "Cancel and Renew - Select Cancellation Reason",
+     "x": 4121,
+     "y": 5748,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:12367",
+     "name": "Cancel and Renew - Click Continue",
+     "x": 5714,
+     "y": 5748,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:12842",
+     "name": "Cancel and Renew - Step 2 Renewal",
+     "x": 7307,
+     "y": 5748,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:13295",
+     "name": "Schedule, No Renew - Click Submit",
+     "x": 15950,
+     "y": 1006,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:13749",
+     "name": "Schedule and Renew Modal - Confirmation Toast",
+     "x": 11395,
+     "y": 1006,
+     "w": 1440,
+     "h": 1132
+    },
+    {
+     "id": "1:14140",
+     "name": "Schedule and Renew Sidesheet - Step 1",
+     "x": 2528,
+     "y": 1006,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:14621",
+     "name": "Schedule and Renew Sidesheet - Step 2 | Prompt Renewal",
+     "x": 4121,
+     "y": 1006,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:15075",
+     "name": "Schedule and Renew Sidesheet - Step 2 | Show Renewal Fields",
+     "x": 5714,
+     "y": 1006,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:15616",
+     "name": "Schedule and Renew Sidesheet - Step 2 | Click Submit",
+     "x": 9802,
+     "y": 1006,
+     "w": 1440,
+     "h": 2038
+    },
+    {
+     "id": "1:16168",
+     "name": "Schedule and Renew Sidesheet - Step 2 | Click E-Sign",
+     "x": 8209,
+     "y": 1006,
+     "w": 1440,
+     "h": 2038
+    },
+    {
+     "id": "1:16720",
+     "name": "Cancel and Renew - Click Submit",
+     "x": 9174,
+     "y": 5748,
+     "w": 1440,
+     "h": 1024
+    },
+    {
+     "id": "1:17272",
+     "name": "Schedule and Renew Sidesheet - Step 2 | Select Diagnosis",
+     "x": 7230,
+     "y": 1006,
+     "w": 826,
+     "h": 1882
+    },
+    {
+     "id": "1:17440",
+     "name": "Schedule, No Renew - Confirmation Toast",
+     "x": 17543,
+     "y": 1006,
+     "w": 1440,
+     "h": 1132
+    },
+    {
+     "id": "1:17851",
+     "name": "Cancel and Renew - Confirmation Toast",
+     "x": 10767,
+     "y": 5748,
+     "w": 1440,
+     "h": 1132
+    },
+    {
+     "id": "1:18242",
+     "name": "Cancel, No Renew - Confirmation Toast",
+     "x": 16928,
+     "y": 5748,
+     "w": 1440,
+     "h": 1132
+    },
+    {
+     "id": "1:18633",
+     "name": "Modify (Schedule Last Draw) - Renewal Ordering Page",
+     "x": 2528,
+     "y": 10553,
+     "w": 1440,
+     "h": 3070
+    },
+    {
+     "id": "1:18950",
+     "name": "Modify (Cancel Last Draw) - Renewal Ordering Page",
+     "x": 8963,
+     "y": 10553,
+     "w": 1440,
+     "h": 3092
+    },
+    {
+     "id": "1:19276",
+     "name": "Modify (Schedule Last Draw) - Success Page",
+     "x": 4395,
+     "y": 10553,
+     "w": 1440,
+     "h": 1008
+    },
+    {
+     "id": "1:19376",
+     "name": "Modify (Cancel Last Draw) - Success Page",
+     "x": 10830,
+     "y": 10553,
+     "w": 1440,
+     "h": 1008
+    }
+   ],
+   "y": 3985
+  }
+ ]
+}
