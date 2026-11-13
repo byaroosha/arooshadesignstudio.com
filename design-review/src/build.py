@@ -117,7 +117,9 @@ known = {s['id'] for sec in SECTIONS for g in sec['groups'] for s in g['screens'
 bad = [(k, t) for k, hs in HOTSPOTS.items() for h in hs for t in [h[5]] if k not in known or t not in known]
 if bad: print('BAD HOTSPOT IDS', bad)
 
-DATA_JS = json.dumps({'fileKey': FILE_KEY, 'updates': UPDATES, 'sections': SECTIONS, 'hotspots': HOTSPOTS}, ensure_ascii=False)
+# Set EMPTY_MIDDLE = False once the Figma screens should show again; everything else stays wired up.
+EMPTY_MIDDLE = True
+DATA_JS = json.dumps({'fileKey': FILE_KEY, 'updates': UPDATES, 'sections': SECTIONS, 'hotspots': HOTSPOTS, 'empty': EMPTY_MIDDLE}, ensure_ascii=False)
 
 PAGE = r'''<title>Monitoring Program Renewal Review</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -299,6 +301,8 @@ details.dismissed .list{display:flex;flex-direction:column;gap:8px;margin-top:8p
 .screen.flash{animation:none}
 @media (prefers-reduced-motion:no-preference){ .screen.flash .hot{animation:hotflash .9s ease} @keyframes hotflash{0%,100%{box-shadow:0 0 0 0 var(--accent-soft)}40%{box-shadow:0 0 0 8px var(--accent-soft)}} }
 .end-note{font-size:12.5px;color:var(--muted);border:1px dashed var(--border);border-radius:8px;padding:10px 12px}
+.slot{border:2px dashed var(--border-strong);border-radius:12px;background:var(--surface);min-height:420px;aspect-ratio:16/10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);text-align:center;padding:24px}
+.slot b{color:var(--fg);font-weight:600;font-size:15px}
 
 body.present #bar,body.present #panel{display:none}
 #exit-present{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;box-shadow:var(--shadow)}
@@ -408,15 +412,16 @@ function renderProto(inner){
     <nav class="subnav" aria-label="Sub-flows">${s.groups.map((g,i) => `<a href="#" data-jump="${g.screens[0].id}"${g === sc.group ? ' aria-current="true"' : ''}>${esc(g.label || g.flow)}</a>`).join('')}</nav>
     <div class="proto">
       <div class="proto-main">
-        <div class="crumb"><span>${esc(s.name)}</span><span class="sep">›</span><span>${esc(sc.group.label || sc.group.flow)}</span><span class="sep">›</span><b>Step ${sc.step} of ${list.length}</b></div>
-        <div class="proto-nav"><button type="button" class="btn" id="p-back"${state.history.length?'':' disabled'}>← Back</button><button type="button" class="btn" id="p-next"${idx < list.length-1?'':' disabled'}>Next →</button><span class="spacer"></span><span class="note">${hs.length ? hs.length + (hs.length===1?' clickable area':' clickable areas') + ' on this screen' : 'End of this path'}</span><button type="button" class="btn small" id="p-restart">Restart flow</button></div>
+        <div class="crumb"><span>${esc(s.name)}</span><span class="sep">›</span><span>${esc(sc.group.label || sc.group.flow)}</span>${DATA.empty ? '' : `<span class="sep">›</span><b>Step ${sc.step} of ${list.length}</b>`}</div>
+        ${DATA.empty ? `<div class="slot"><b>Design goes here</b><span>Connect Figma to load the screens for ${esc(sc.group.label || sc.group.flow)}.</span></div>` : `<div class="proto-nav"><button type="button" class="btn" id="p-back"${state.history.length?'':' disabled'}>← Back</button><button type="button" class="btn" id="p-next"${idx < list.length-1?'':' disabled'}>Next →</button><span class="spacer"></span><span class="note">${hs.length ? hs.length + (hs.length===1?' clickable area':' clickable areas') + ' on this screen' : 'End of this path'}</span><button type="button" class="btn small" id="p-restart">Restart flow</button></div>
         <article class="screen${state.showHot?' show-hot':''}" data-screen="${sc.id}"><div class="screen-head"><span class="step">${String(sc.step).padStart(2,'0')}</span><span class="name">${esc(sc.name)}</span></div>${shotHtml(sc)}</article>
-        ${hs.length ? '' : `<div class="end-note">This screen ends the path. Use Back, pick another step on the left, or Restart flow.</div>`}
+        ${hs.length ? '' : `<div class="end-note">This screen ends the path. Use Back, pick another step on the left, or Restart flow.</div>`}`}
       </div></div>`;
 }
 function goTo(id, push){ if(!screenOf(id)) return; if(push && state.current && state.current !== id) state.history.push(state.current); state.current = id; render(); $('#stage').scrollTop = 0; }
 function applyPins(){
   $$('.pins').forEach(p => p.innerHTML = '');
+  if(DATA.empty) return;
   $$('.screen').forEach(el => el.classList.toggle('picking', state.picking));
   const f = state.form;
   if(f.type === 'area' && f.screen && f.fx != null){ const el = $(`[data-screen="${CSS.escape(f.screen)}"] .pins`); if(el) el.innerHTML += `<span class="pin draft" style="left:${f.fx*100}%;top:${f.fy*100}%" title="New comment">+</span>`; }
@@ -461,7 +466,7 @@ function renderPanel(){
     <div class="panel-body">${filtered.length ? filtered.map(c => renderComment(c,false)).join('') : `<div class="empty">${live.length ? 'Nothing in this category.' : (state.tab==='ux' ? 'No insights for this update yet.' : 'No feedback on this update yet.')}</div>`}
       ${(dismissed.length && roleIsDesigner()) ? `<details class="dismissed"><summary>Dismissed (${dismissed.length})</summary><div class="list">${dismissed.map(c => renderComment(Object.assign({n:'·'},c),true)).join('')}</div></details>` : ''}</div>
     ${canPost ? renderForm() : ''}
-    <div class="panel-foot"><span>UX insights come from the Figma file. Posts and dismissals are saved in this browser only.</span><button type="button" class="link-btn" id="reset-btn">Reset</button></div>`;
+    <div class="panel-foot"><span>${DATA.empty ? 'Screens are hidden until Figma is connected. ' : 'UX insights come from the Figma file. '}Posts and dismissals are saved in this browser only.</span><button type="button" class="link-btn" id="reset-btn">Reset</button></div>`;
   if(canPost){ $('#f-name').value = state.form.name; $('#f-text').value = state.form.text; syncPost(); }
 }
 function renderComment(c, isDismissed){
@@ -475,7 +480,7 @@ function renderComment(c, isDismissed){
     <div class="num${sel?' on':''}${linked?'':' general'}">${linked?c.n:'·'}</div>
     <div class="c-meta"><b>${esc(c.author)}</b>${rolePill}${c.date?`<span>${esc(fmtDate(c.date))}</span>`:''}${c.isNew?'<span class="pill newpill">New this update</span>':''}${statusPill}</div>
     <div class="c-text">${esc(c.text)}</div>
-    <div class="c-tags">${scr?`<span class="tag area" title="${esc(scr.name)}">${String(scr.step).padStart(2,'0')} · ${esc(scr.name)}</span>`:'<span class="tag">General</span>'}<span class="tag">${esc(c.category)}</span></div>
+    <div class="c-tags">${scr?`<span class="tag area" title="${esc(scr.name)}">${String(scr.step).padStart(2,'0')} · ${esc(scr.name)}</span>`:'<span class="tag">General</span>'}${(!scr && c.category === 'General') ? '' : `<span class="tag">${esc(c.category)}</span>`}</div>
     ${actions?`<div class="c-actions">${actions}</div>`:''}</div>`;
 }
 function renderForm(){
@@ -483,7 +488,7 @@ function renderForm(){
   return `<form class="cform" id="cform"><h3>Add ${role==='UX'?'an insight':'feedback'} as ${role}</h3>
     <div class="two"><div><label class="sr-only" for="f-name">Your name</label><input id="f-name" placeholder="Your name"></div><div><label class="sr-only" for="f-cat">Category</label><select id="f-cat">${CATEGORIES.map(c => `<option${f.category===c?' selected':''}>${c}</option>`).join('')}</select></div></div>
     <label class="sr-only" for="f-text">Comment</label><textarea id="f-text" placeholder="What should change, and why?"></textarea>
-    <div class="area-pick"><div class="seg" role="group" aria-label="Comment type"><button type="button" data-ftype="general" aria-pressed="${f.type==='general'}">General</button><button type="button" data-ftype="area" aria-pressed="${f.type==='area'}">Specific spot</button></div>
+    <div class="area-pick">${DATA.empty ? '' : `<div class="seg" role="group" aria-label="Comment type"><button type="button" data-ftype="general" aria-pressed="${f.type==='general'}">General</button><button type="button" data-ftype="area" aria-pressed="${f.type==='area'}">Specific spot</button></div>`}
       ${f.type==='area' ? (scr ? `<span class="tag area" title="${esc(scr.name)}">${String(scr.step).padStart(2,'0')} · ${esc(scr.name)}</span><button type="button" class="link-btn" id="pick-change">Change</button><button type="button" class="link-btn" id="pick-remove">Remove</button>` : `<button type="button" class="btn small" id="pick-area">${state.picking?'Click a spot on a screen…':'Pick a spot on a screen'}</button>`) : ''}</div>
     <div class="foot"><button type="submit" class="btn primary" id="post-btn" disabled>Post</button><span class="toast" id="post-toast"></span></div></form>`;
 }
