@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Design review</title>
+<style>
+/*
+  Design review frame
+  A review layer around any design. All project content comes from review.config.json.
+  Layout: top bar, then a scrolling stage that holds the design, then a comments panel that takes
+  width from the stage (it covers the whole screen at phone width).
+  Colour rules: one accent for selection and markers, one colour per role label, neutrals for the rest.
+*/
+:root{
+  color-scheme:light;
+  --bg:#f1f2f5; --surface:#ffffff; --surface-2:#f6f7f9; --fg:#17181c; --muted:#5b5f6b; --border:#d8dbe2; --border-strong:#aeb3bf;
+  --accent:#c2410c; --accent-fg:#ffffff; --accent-text:#c2410c; --accent-soft:rgba(194,65,12,.14);
+  --ux:#0f6e66; --ux-soft:rgba(15,118,110,.13);
+  --stake:#7e22ce; --stake-soft:rgba(126,34,206,.11);
+  --ok:#166534; --ok-soft:rgba(21,128,61,.13);
+  --shadow:0 10px 30px rgba(16,18,24,.16);
+  /* drawn over the design, so the same in both themes */
+  --paper:#ffffff; --mark-ring:#ffffff; --mark-soft:rgba(194,65,12,.16); --mark-shadow:0 1px 4px rgba(0,0,0,.45);
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --panel-w:400px;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#111216; --surface:#1a1c22; --surface-2:#22252c; --fg:#ececf1; --muted:#a2a6b3; --border:#30343e; --border-strong:#545a68;
+  --accent-text:#ff9a62; --accent-soft:rgba(234,88,12,.26);
+  --ux:#5ed3c7; --ux-soft:rgba(94,211,199,.16);
+  --stake:#cfa5f7; --stake-soft:rgba(200,155,245,.17);
+  --ok:#6fd58a; --ok-soft:rgba(95,207,124,.16);
+  --shadow:0 10px 30px rgba(0,0,0,.55);
+} }
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111216; --surface:#1a1c22; --surface-2:#22252c; --fg:#ececf1; --muted:#a2a6b3; --border:#30343e; --border-strong:#545a68;
+  --accent-text:#ff9a62; --accent-soft:rgba(234,88,12,.26);
+  --ux:#5ed3c7; --ux-soft:rgba(94,211,199,.16);
+  --stake:#cfa5f7; --stake-soft:rgba(200,155,245,.17);
+  --ok:#6fd58a; --ok-soft:rgba(95,207,124,.16);
+  --shadow:0 10px 30px rgba(0,0,0,.55);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--font);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.45}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- loading and setup ---------- */
+.boot{height:100%;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto}
+.boot-card{width:min(560px,100%);background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow)}
+.boot-card .boot-eyebrow{margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-text)}
+.boot-card h1{margin:0 0 8px;font-size:20px;line-height:1.25}
+.boot-card p{margin:0 0 12px;color:var(--muted);overflow-wrap:anywhere}
+.boot-card ul{margin:0 0 12px;padding-left:18px;color:var(--muted)}
+.boot-card code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+.boot-card p:last-child{margin-bottom:0}
+#boot-pick{margin-top:16px}
+
+/* ---------- app shell ---------- */
+#app{height:100%;display:flex;flex-direction:column}
+#bar{flex:none;position:relative;z-index:6;display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;background:var(--surface);border-bottom:1px solid var(--border);
+  padding:max(8px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px))}
+.brand{display:flex;align-items:center;gap:8px;min-width:0;flex:0 1 auto;max-width:34ch;font-weight:650}
+.brand::before{content:"";flex:none;width:10px;height:10px;border-radius:3px;background:var(--accent)}
+.brand span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-ctl{display:flex;align-items:center;gap:8px;min-width:0}
+.bar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+
+.ctl{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);line-height:1.2;white-space:nowrap}
+.ctl:hover{border-color:var(--border-strong)}
+select.ctl{appearance:none;-webkit-appearance:none;min-width:0;max-width:100%;padding-right:28px;text-overflow:ellipsis;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 14px) 55%,calc(100% - 9px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+#changes-btn[aria-expanded="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.seg{display:inline-flex;gap:2px;padding:2px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2)}
+.seg button{border:0;background:transparent;border-radius:6px;min-height:28px;padding:4px 10px;color:var(--muted);font-weight:550;line-height:1.2;white-space:nowrap}
+.seg button:hover{color:var(--fg)}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--surface)}
+.icon-btn{position:relative;width:38px;padding:0;justify-content:center}
+.icon-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.icon-btn[aria-expanded="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.badge{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-fg);
+  font-size:11px;font-weight:700;line-height:18px;text-align:center;font-variant-numeric:tabular-nums}
+
+.menu{position:fixed;z-index:30;width:min(380px,calc(100vw - 24px));max-height:min(60vh,480px);overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:6px}
+.menu h3{margin:8px 8px 6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.menu ul{list-style:none;margin:0;padding:0}
+.menu li + li{border-top:1px solid var(--border)}
+.change{display:flex;flex-direction:column;gap:2px;width:100%;padding:9px 8px;border:0;border-radius:6px;background:transparent;text-align:left;overflow-wrap:anywhere}
+button.change:hover{background:var(--surface-2)}
+.change .where{font-size:12px;color:var(--muted)}
+button.change .where::after{content:" \2192"}
+.menu .none{margin:0;padding:8px;color:var(--muted)}
+
+#main{flex:1;min-height:0;display:flex;position:relative;overflow:hidden}
+#stage-wrap{flex:1 1 0;min-width:0;position:relative;display:flex}
+#stage{flex:1;min-width:0;position:relative;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+  padding:0 max(16px,env(safe-area-inset-right,0px)) 72px max(16px,env(safe-area-inset-left,0px))}
+#stage.embed{padding-bottom:16px}
+#stage:focus{outline:none}
+.stage-inner{max-width:1240px;margin:0 auto;padding-top:20px;display:flex;flex-direction:column;gap:14px}
+.stage-inner.embed{max-width:none;min-height:100%}
+
+/* ---------- header ---------- */
+.head h1{margin:0;font-size:22px;line-height:1.2;font-weight:650;text-wrap:balance;overflow-wrap:anywhere}
+.head .desc{margin:4px 0 0;max-width:75ch;color:var(--muted);overflow-wrap:anywhere}
+.head .meta{margin-top:8px;display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted)}
+.head .date{font-weight:600;color:var(--fg)}
+.team{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin:0;padding:0;list-style:none}
+.team li{display:inline-flex;align-items:center;gap:5px}
+.pill{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:700;line-height:16px;white-space:nowrap}
+.pill.ux{background:var(--ux-soft);color:var(--ux)}
+.pill.stake{background:var(--stake-soft);color:var(--stake)}
+details.warn{border:1px dashed var(--border-strong);border-radius:8px;padding:8px 12px;font-size:12.5px;color:var(--muted)}
+details.warn summary{cursor:pointer;font-weight:600;color:var(--fg)}
+details.warn ul{margin:6px 0 0;padding-left:18px}
+
+/* ---------- click-through prototype ---------- */
+.flows{position:sticky;top:0;z-index:4;display:flex;flex-wrap:wrap;gap:6px;margin:-8px 0;padding:8px 0;background:var(--bg)}
+.chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--muted);padding:5px 12px;font-size:12.5px;font-weight:550;line-height:1.3}
+.chip:hover{border-color:var(--border-strong);color:var(--fg)}
+.chip[aria-current="true"],.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.crumb{display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px;font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.crumb b{color:var(--fg);font-weight:600}
+.crumb .sep{opacity:.6}
+.proto-nav{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.proto-nav .spacer{flex:1}
+.btn{border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:7px 12px;font-weight:550;line-height:1.2;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--border-strong)}
+.btn.primary{background:var(--fg);border-color:var(--fg);color:var(--surface)}
+.btn.small{padding:5px 9px;font-size:12.5px}
+.btn.quiet{background:transparent}
+.screen{width:100%;margin:0 auto;border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow:hidden;box-shadow:0 1px 2px rgba(16,18,24,.06)}
+.screen-cap{display:flex;align-items:baseline;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border);font-size:12.5px}
+.screen-cap .step{font-family:var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.screen-cap .name{font-weight:600;overflow-wrap:anywhere}
+.shot{position:relative;background:var(--paper);line-height:0;user-select:none;-webkit-user-select:none}
+.shot img{display:block;width:100%;height:auto}
+.shot .missing{display:flex;align-items:center;justify-content:center;min-height:200px;padding:24px;background:var(--surface-2);color:var(--muted);font-size:13px;line-height:1.45;text-align:center;overflow-wrap:anywhere}
+.hots,.pins{position:absolute;inset:0;pointer-events:none}
+.hots{z-index:2}
+.pins{z-index:3}
+.hot{position:absolute;padding:0;border:2px solid transparent;border-radius:6px;background:transparent;pointer-events:auto;cursor:pointer}
+.hot:hover,.hot:focus-visible,.shot.flash .hot{border-color:var(--accent);background:var(--mark-soft);outline:none}
+.shot.picking{cursor:crosshair}
+.shot.picking .hot,.shot.picking .pin{pointer-events:none}
+.pin{position:absolute;transform:translate(-50%,-50%);min-width:24px;height:24px;padding:0 5px;border:2px solid var(--mark-ring);border-radius:12px;background:var(--accent);color:var(--accent-fg);
+  font-size:12px;font-weight:700;line-height:20px;text-align:center;font-variant-numeric:tabular-nums;box-shadow:var(--mark-shadow);pointer-events:auto}
+.pin.on{transform:translate(-50%,-50%) scale(1.2);box-shadow:0 0 0 3px var(--accent),0 0 0 9px var(--mark-soft),var(--mark-shadow)}
+.pin.draft{background:var(--paper);color:var(--accent);border:2px dashed var(--accent);pointer-events:none}
+
+/* ---------- embedded designs (figma, code) ---------- */
+.frame{position:relative;flex:1 1 auto;min-height:360px;border:1px solid var(--border);border-radius:10px;background:var(--paper);overflow:hidden;box-shadow:0 1px 2px rgba(16,18,24,.06)}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+.capture{position:absolute;inset:0;z-index:4;cursor:crosshair;background:var(--mark-soft)}
+
+/* ---------- floating hint ---------- */
+#float{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:8;display:flex;align-items:center;gap:10px;width:max-content;max-width:calc(100% - 24px);
+  padding:8px 8px 8px 14px;border-radius:999px;background:var(--fg);color:var(--surface);font-size:13px;box-shadow:var(--shadow)}
+#float.plain{padding-right:14px}
+#float button{flex:none;border:0;border-radius:999px;background:var(--surface);color:var(--fg);padding:5px 12px;font-weight:600;white-space:nowrap}
+
+/* ---------- comments panel ---------- */
+#panel{flex:none;width:0;overflow:hidden;visibility:hidden;background:var(--surface);border-left:0 solid var(--border);transition:width .22s ease,visibility 0s linear .22s}
+#panel.open{width:var(--panel-w);border-left-width:1px;visibility:visible;transition:width .22s ease,visibility 0s}
+.panel-inner{width:calc(var(--panel-w) - 1px);height:100%;display:flex;flex-direction:column;min-height:0}
+.panel-head{flex:none;display:flex;align-items:flex-start;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.panel-head .grow{flex:1;min-width:0}
+.panel-head h2{margin:0;font-size:15px;font-weight:650}
+.panel-head .sub{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.x{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--muted)}
+.x:hover{background:var(--surface-2);color:var(--fg)}
+.tabs{flex:none;display:flex;padding:0 8px;border-bottom:1px solid var(--border)}
+.tabs button{display:flex;align-items:center;gap:6px;margin-bottom:-1px;padding:10px 8px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);font-weight:550;text-align:left}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.count{padding:0 6px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);font-size:11px;line-height:16px;font-variant-numeric:tabular-nums}
+.filters{flex:none;display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px 0}
+.filters .chip{padding:3px 10px;font-size:12px;background:transparent}
+.filters .chip[aria-pressed="true"]{background:var(--accent)}
+.panel-body{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:10px;padding:12px 14px}
+.panel-body:focus{outline:none}
+.empty{margin:0;padding:18px 8px;border:1px dashed var(--border);border-radius:8px;color:var(--muted);font-size:13px;text-align:center}
+.comment{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.comment.pinned{cursor:pointer}
+.comment.pinned:hover{border-color:var(--border-strong)}
+.comment.selected{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.comment.dim{opacity:.7}
+.num{width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--accent-text);background:transparent;color:var(--accent-text);font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.comment.selected .num{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.num.general{border:1.5px dashed var(--border-strong)}
+.c-body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.c-meta{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;font-size:12px;color:var(--muted)}
+.c-meta b{color:var(--fg);font-weight:650;overflow-wrap:anywhere}
+.c-text{margin:0;font-size:13.5px;white-space:pre-line;overflow-wrap:anywhere}
+.c-tags{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.tag{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:1px 6px;border:1px solid var(--border);border-radius:5px;background:var(--surface-2);color:var(--muted);font-size:11px;line-height:16px}
+.tag.where{color:var(--fg);border-color:var(--border-strong)}
+.status{font-size:11px;font-weight:650;line-height:16px;padding:1px 7px;border-radius:999px;white-space:nowrap}
+.status.open{border:1px solid var(--border-strong);color:var(--muted);padding:0 6px}
+.status.progress{background:var(--border);color:var(--fg)}
+.status.resolved{background:var(--ok-soft);color:var(--ok)}
+.c-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;margin-top:2px}
+.c-actions select.ctl{min-height:28px;padding:3px 26px 3px 8px;border-radius:6px;font-size:12px}
+.c-actions .resolved-in{font-size:12px;font-weight:600;color:var(--ok)}
+.link{border:0;background:transparent;padding:3px 4px;border-radius:5px;color:var(--muted);font-size:12px;text-decoration:underline;text-underline-offset:2px}
+.link:hover{color:var(--fg)}
+details.dismissed{margin-top:4px;padding-top:8px;border-top:1px solid var(--border)}
+details.dismissed summary{cursor:pointer;padding:4px 0;color:var(--muted);font-size:12px;font-weight:650}
+details.dismissed .list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.cform{flex:none;border-top:1px solid var(--border);background:var(--surface-2)}
+.cform-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:10px 14px;border:0;background:transparent;font-size:12.5px;font-weight:650;text-align:left}
+.cform-toggle svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.cform-toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+.cform form{display:flex;flex-direction:column;gap:8px;padding:0 14px 12px}
+.cform .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.field{display:flex;flex-direction:column;gap:3px;min-width:0}
+.field > span{font-size:11.5px;font-weight:600;color:var(--muted)}
+.field input,.field textarea,.field select{width:100%;min-width:0;padding:7px 9px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface)}
+.field textarea{min-height:60px;max-height:30vh;resize:vertical;display:block}
+.spot-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px}
+.cform .foot{display:flex;align-items:center;gap:10px}
+.cform .note{font-size:12px;color:var(--muted)}
+.where-note{flex:none;margin:0;padding:10px 14px;border-top:1px solid var(--border);background:var(--surface-2);font-size:12.5px;color:var(--muted)}
+.where-note .link{padding:0;font-size:12.5px;color:var(--fg)}
+.panel-foot .actions{flex:none;display:flex;align-items:center;gap:8px}
+.panel-foot{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+
+@media (max-width:1000px){ :root{--panel-w:340px} }
+@media (max-width:760px){
+  .brand{order:1;flex:1 1 0;max-width:none}
+  .bar-right{order:2}
+  .bar-ctl{order:3;flex:1 1 100%}
+  .bar-ctl select.ctl{flex:1 1 auto}
+  .ctl{min-height:38px;padding-left:9px;padding-right:9px}
+  select.ctl{padding-right:24px;background-position:calc(100% - 12px) 55%,calc(100% - 7px) 55%}
+  .seg button{min-height:32px}
+  .head h1{font-size:19px}
+  .stage-inner{padding-top:14px}
+  #panel,#panel.open{position:fixed;inset:0;z-index:20;width:100%;border-left-width:0}
+  #panel{transform:translateX(100%);transition:transform .22s ease,visibility 0s linear .22s}
+  #panel.open{transform:none;transition:transform .22s ease,visibility 0s}
+  body.peek #panel.open{transform:translateX(100%);visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s}
+  .panel-inner{width:100%;padding-top:env(safe-area-inset-top,0px)}
+  .panel-head,.filters,.panel-body,.cform-toggle,.cform form,.where-note,.panel-foot{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .tabs{padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+  /* 16px keeps phones from zooming the page when a field gets focus */
+  .field input,.field textarea,.field select,select.ctl{font-size:16px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .shot.flash .hot{animation:hotflash .7s ease-out}
+  .pin.on{animation:pinpulse .9s ease-out}
+  @keyframes hotflash{0%{box-shadow:0 0 0 0 var(--mark-soft)}45%{box-shadow:0 0 0 8px var(--mark-soft)}100%{box-shadow:0 0 0 0 transparent}}
+  @keyframes pinpulse{0%{box-shadow:0 0 0 3px var(--accent),0 0 0 3px var(--mark-soft)}60%{box-shadow:0 0 0 3px var(--accent),0 0 0 16px var(--mark-soft)}100%{box-shadow:0 0 0 3px var(--accent),0 0 0 9px var(--mark-soft),var(--mark-shadow)}}
+}
+@media (prefers-reduced-motion:reduce){
+  #panel,#panel.open,body.peek #panel.open,.cform-toggle svg{transition:none}
+}
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px">This page needs JavaScript to load the review.</p></noscript>
+
+<div class="boot" id="boot">
+  <div class="boot-card">
+    <p class="boot-eyebrow">Design review</p>
+    <h1 id="boot-title">Loading the review…</h1>
+    <div id="boot-body"></div>
+    <div id="boot-pick" hidden>
+      <button type="button" class="btn primary" id="boot-choose">Choose the config file</button>
+      <input type="file" id="boot-file" accept=".json,application/json,text/plain" hidden>
+    </div>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header id="bar">
+    <div class="brand"><span id="brand"></span></div>
+    <div class="bar-ctl">
+      <label class="sr-only" for="update-select">Update</label>
+      <select class="ctl" id="update-select"></select>
+      <button type="button" class="ctl" id="changes-btn" aria-expanded="false" aria-controls="changes-menu">What changed</button>
+    </div>
+    <div class="bar-right">
+      <div class="seg" role="group" aria-label="View as">
+        <button type="button" data-role="designer" aria-pressed="true">Designer</button>
+        <button type="button" data-role="stakeholder" aria-pressed="false">Stakeholder</button>
+      </div>
+      <button type="button" class="ctl icon-btn" id="comments-btn" aria-expanded="false" aria-controls="panel" aria-label="Comments" title="Comments">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H8l-5 3 1.2-4.5A8 8 0 1 1 21 12z"/></svg>
+        <span class="badge" id="comments-badge" aria-hidden="true" hidden></span>
+      </button>
+    </div>
+  </header>
+  <div id="main">
+    <div id="stage-wrap">
+      <main id="stage" tabindex="-1"><div class="stage-inner" id="stage-inner"></div></main>
+      <div id="float" role="status" hidden></div>
+    </div>
+    <aside id="panel" aria-label="Comments"><div class="panel-inner" id="panel-inner"></div></aside>
+  </div>
+  <div class="menu" id="changes-menu" hidden></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= constants ================= */
+const DEFAULT_CONFIG = 'review.config.json';
+const CATEGORIES = ['Accessibility', 'Design system', 'Content', 'Flow', 'General'];
+const STATUSES = { open: 'Open', progress: 'In progress', resolved: 'Resolved' };
+const TABS = {
+  ux: { label: 'Insight from UX', role: 'UX', viewer: 'designer', pill: 'ux', add: 'Add an insight as', empty: 'No UX insight on this update yet.' },
+  stakeholder: { label: 'Stakeholder feedback', role: 'Stakeholder', viewer: 'stakeholder', pill: 'stake', add: 'Add feedback as', empty: 'No stakeholder feedback on this update yet.' }
+};
+const NARROW = window.matchMedia('(max-width: 760px)');
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
+const PARAMS = new URLSearchParams(location.search);
+
+/* ================= small helpers ================= */
+const $ = (sel, root = document) => root.querySelector(sel);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const str = v => (typeof v === 'string' ? v.trim() : (typeof v === 'number' && isFinite(v) ? String(v) : ''));
+const num = v => (typeof v === 'number' && isFinite(v) ? v : (typeof v === 'string' && v.trim() !== '' && isFinite(+v) ? +v : null));
+const pad = n => String(n).padStart(2, '0');
+const pct = v => (Math.round(v * 100000) / 1000) + '%';
+const isIsoDate = v => /^\d{4}-\d{2}-\d{2}/.test(v || '');
+function fmtDate(v) {
+  if (!isIsoDate(v)) return v || '';
+  const d = new Date(+v.slice(0, 4), +v.slice(5, 7) - 1, +v.slice(8, 10));
+  return isNaN(d) ? v : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function todayIso() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+
+/* ================= config: load, parse, check ================= */
+class ConfigError extends Error {}
+
+/* Lets the config carry // and block comments and trailing commas. Removed characters become spaces
+   so that line and column numbers in JSON error messages still match the file. */
+function stripJsonExtras(src) {
+  const out = src.split('');
+  const n = src.length;
+  let i = 0, inString = false;
+  while (i < n) {
+    const c = src[i], d = src[i + 1];
+    if (inString) {
+      if (c === '\\') { i += 2; continue; }
+      if (c === '"') inString = false;
+      i++; continue;
+    }
+    if (c === '"') { inString = true; i++; continue; }
+    if (c === '/' && d === '/') { while (i < n && src[i] !== '\n' && src[i] !== '\r') out[i++] = ' '; continue; }
+    if (c === '/' && d === '*') {
+      const end = src.indexOf('*/', i + 2);
+      const stop = end === -1 ? n : end + 2;
+      for (; i < stop; i++) if (src[i] !== '\n' && src[i] !== '\r') out[i] = ' ';
+      continue;
+    }
+    i++;
+  }
+  // trailing commas: a comma whose next non-space character closes an object or a list
+  inString = false;
+  for (i = 0; i < n; i++) {
+    const c = out[i];
+    if (inString) { if (c === '\\') i++; else if (c === '"') inString = false; continue; }
+    if (c === '"') { inString = true; continue; }
+    if (c === ',') {
+      let j = i + 1;
+      while (j < n && /\s/.test(out[j])) j++;
+      if (out[j] === '}' || out[j] === ']') out[i] = ' ';
+    }
+  }
+  return out.join('');
+}
+
+function parseConfig(text) {
+  const clean = stripJsonExtras(text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text);
+  try { return JSON.parse(clean); }
+  catch (err) {
+    let msg = String(err && err.message || err);
+    const m = /position (\d+)/.exec(msg);
+    if (m && !/line \d+/.test(msg)) {
+      const before = clean.slice(0, +m[1]).split('\n');
+      msg += ' (line ' + before.length + ', column ' + (before[before.length - 1].length + 1) + ')';
+    }
+    throw new ConfigError('The file is not valid JSON. ' + msg);
+  }
+}
+
+function resolveUrl(path, base, field, schemes) {
+  let u;
+  try { u = new URL(path, base); } catch (e) { throw new ConfigError('"' + field + '" is not a usable path: ' + path); }
+  if (!schemes.includes(u.protocol)) throw new ConfigError('"' + field + '" must be a relative path or an http(s) address.');
+  return u.href;
+}
+
+/* Accepts the embed link Figma gives you, or a normal share link, and returns the iframe address. */
+function figmaEmbedUrl(input) {
+  if (!input) throw new ConfigError('"design.url" is missing. Paste the link from Figma’s Share menu.');
+  let u;
+  try { u = new URL(input.replace(/&amp;/g, '&')); } // "&amp;" shows up when the address is copied out of an <iframe> snippet
+  catch (e) { throw new ConfigError('"design.url" is not a full address: ' + input); }
+  const host = u.hostname.toLowerCase();
+  if (u.protocol !== 'https:' || !(host === 'figma.com' || host.endsWith('.figma.com'))) {
+    throw new ConfigError('"design.url" must be an https://figma.com link when "design.type" is "figma".');
+  }
+  if (host !== 'embed.figma.com') {
+    if (u.pathname === '/embed' || u.pathname.startsWith('/embed/')) return u.href; // older embed format, used as given
+    u.hostname = 'embed.figma.com';
+  }
+  if (!u.searchParams.has('embed-host')) u.searchParams.set('embed-host', 'design-review');
+  return u.href;
+}
+
+function normalizeConfig(raw, base) {
+  const warnings = [];
+  const warn = m => warnings.push(m);
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new ConfigError('The config must be one JSON object: { "project": …, "team": …, "design": …, "updates": … }.');
+
+  const project = { name: str(raw.project && raw.project.name), description: str(raw.project && raw.project.description) };
+  if (!project.name) throw new ConfigError('"project.name" is missing.');
+
+  const team = (Array.isArray(raw.team) ? raw.team : []).map(m => {
+    const name = str(m && m.name), role = normRole(m && m.role);
+    if (name && !role) warn('Team member "' + name + '" needs a role of "UX" or "Stakeholder".');
+    return { name, role };
+  }).filter(m => m.name && m.role);
+
+  const design = normalizeDesign(raw.design, base, warn);
+  const updates = normalizeUpdates(raw.updates, design, warn);
+  return { project, team, design, updates, warnings };
+}
+
+function normRole(v) {
+  const s = str(v).toLowerCase();
+  return s === 'ux' ? 'UX' : s === 'stakeholder' ? 'Stakeholder' : '';
+}
+
+function normalizeDesign(d, base, warn) {
+  if (!d || typeof d !== 'object') throw new ConfigError('"design" is missing.');
+  const type = str(d.type).toLowerCase();
+  if (type === 'figma') return { type, src: figmaEmbedUrl(str(d.url)) };
+  if (type === 'code') {
+    const path = str(d.path) || str(d.url);
+    if (!path) throw new ConfigError('"design.path" is missing. Point it at your HTML page, for example "prototype/index.html".');
+    return { type, src: resolveUrl(path, base, 'design.path', ['http:', 'https:', 'file:']) };
+  }
+  if (type !== 'screens') throw new ConfigError('"design.type" must be "figma", "screens" or "code". It is ' + JSON.stringify(d.type === undefined ? null : d.type) + '.');
+
+  const rawFlows = Array.isArray(d.flows) ? d.flows : (Array.isArray(d.screens) ? [{ name: 'All screens', screens: d.screens }] : null);
+  if (!rawFlows) throw new ConfigError('"design.flows" is missing. It is a list of sub-flows, each with a "name" and a "screens" list.');
+  const flows = [], screens = [], byId = new Map(), rawById = new Map();
+  rawFlows.forEach((f, fi) => {
+    const flow = { name: str(f && f.name) || 'Sub-flow ' + (fi + 1), screens: [] };
+    (Array.isArray(f && f.screens) ? f.screens : []).forEach((s, si) => {
+      const id = str(s && s.id);
+      if (!id) { warn('Screen ' + (si + 1) + ' in "' + flow.name + '" has no "id" and is skipped.'); return; }
+      if (byId.has(id)) { warn('Screen id "' + id + '" is used more than once. Only the first one is shown.'); return; }
+      const sc = { id, name: str(s.name) || id, imagePath: str(s.image), image: '', width: num(s.width), height: num(s.height), hotspots: [], flow, index: screens.length };
+      if (sc.imagePath) {
+        try { sc.image = resolveUrl(sc.imagePath, base, 'image', ['http:', 'https:', 'file:', 'data:', 'blob:']); }
+        catch (e) { warn('Screen "' + id + '": the image path "' + sc.imagePath + '" can’t be used.'); }
+      } else warn('Screen "' + id + '" has no "image".');
+      if (!(sc.width > 0 && sc.height > 0)) { sc.width = sc.height = null; warn('Screen "' + id + '" needs "width" and "height" in pixels. The image’s own size is used for now.'); }
+      flow.screens.push(sc); screens.push(sc); byId.set(id, sc); rawById.set(id, s);
+    });
+    if (flow.screens.length) flows.push(flow); else warn('Sub-flow "' + flow.name + '" has no screens and is hidden.');
+  });
+  if (!screens.length) throw new ConfigError('"design.flows" has no screens yet. Add at least one screen with an "id" and an "image".');
+
+  screens.forEach(sc => {
+    const list = rawById.get(sc.id).hotspots;
+    (Array.isArray(list) ? list : []).forEach((h, hi) => {
+      const x = num(h && h.x), y = num(h && h.y), w = num(h && h.width), ht = num(h && h.height), target = str(h && h.target);
+      const label = 'Screen "' + sc.id + '", hotspot ' + (hi + 1);
+      if (x == null || y == null || !(w > 0) || !(ht > 0)) { warn(label + ' needs "x", "y", "width" and "height" in image pixels.'); return; }
+      if (!byId.has(target)) { warn(label + ' points at "' + target + '", which is not a screen id.'); return; }
+      sc.hotspots.push({ x, y, width: w, height: ht, target, label: str(h.label) || 'Go to ' + byId.get(target).name });
+    });
+  });
+  return { type, flows, screens, byId };
+}
+
+function normalizeUpdates(list, design, warn) {
+  if (!Array.isArray(list) || !list.length) throw new ConfigError('"updates" needs at least one entry with a "date".');
+  const keys = new Set();
+  let updates = list.map((u, i) => {
+    u = u && typeof u === 'object' ? u : {};
+    const date = str(u.date);
+    if (!date) warn('Update ' + (i + 1) + ' has no "date".');
+    else if (!isIsoDate(date)) warn('Update ' + (i + 1) + ': write the date as YYYY-MM-DD so it can be sorted and formatted (it is "' + date + '").');
+    let key = str(u.id) || date || 'update-' + (i + 1);
+    while (keys.has(key)) key += '-' + (i + 1);
+    keys.add(key);
+    const label = 'Update ' + (date || i + 1);
+    const changes = (Array.isArray(u.changes) ? u.changes : []).map(c => {
+      const item = typeof c === 'string' ? { text: c.trim(), screen: '' } : { text: str(c && c.text), screen: str(c && c.screen) };
+      if (item.screen && design.type === 'screens' && !design.byId.has(item.screen)) {
+        warn(label + ', "what changed": "' + item.screen + '" is not a screen id, so that line has no link.');
+        item.screen = '';
+      }
+      return item;
+    }).filter(c => c.text);
+    const ids = new Set();
+    const comments = {};
+    ['ux', 'stakeholder'].forEach(tab => {
+      const src = u.comments && Array.isArray(u.comments[tab]) ? u.comments[tab] : [];
+      comments[tab] = src.map((c, ci) => normalizeComment(c, ci, tab, label, ids, design, warn)).filter(Boolean);
+    });
+    return { key, date, changes, comments };
+  });
+  if (updates.every(u => isIsoDate(u.date))) {
+    updates = updates.map((u, i) => ({ u, i })).sort((a, b) => (a.u.date < b.u.date ? 1 : a.u.date > b.u.date ? -1 : a.i - b.i)).map(x => x.u);
+  }
+  return updates;
+}
+
+function normalizeComment(c, index, tab, label, ids, design, warn) {
+  c = c && typeof c === 'object' ? c : {};
+  const where = label + ', ' + tab + ' comment ' + (index + 1);
+  const text = str(c.text);
+  if (!text) { warn(where + ' has no "text" and is skipped.'); return null; }
+  let id = str(c.id);
+  if (!id) { id = tab + '-' + (index + 1); warn(where + ' has no "id". Give each comment its own id so saved changes stay attached to it.'); }
+  if (ids.has(id)) { warn(where + ': the id "' + id + '" is already used in this update.'); while (ids.has(id)) id += '-dup'; }
+  ids.add(id);
+  const rawCategory = str(c.category);
+  const category = CATEGORIES.find(k => k.toLowerCase() === rawCategory.toLowerCase());
+  if (rawCategory && !category) warn(where + ': category "' + rawCategory + '" is not one of ' + CATEGORIES.join(', ') + '. It is filed under General.');
+  const rawStatus = str(c.status).toLowerCase().replace(/[\s_-]+/g, '');
+  const status = rawStatus === 'inprogress' ? 'progress' : (STATUSES[rawStatus] ? rawStatus : 'open');
+  if (rawStatus && rawStatus !== 'inprogress' && !STATUSES[rawStatus]) warn(where + ': status "' + str(c.status) + '" is not "open", "progress" or "resolved". It is shown as open.');
+  const out = {
+    id, text, category: category || 'General', status,
+    author: str(c.author) || 'Unknown', role: normRole(c.role) || TABS[tab].role, date: str(c.date),
+    resolvedIn: str(c.resolvedIn) || null, dismissed: c.dismissed === true,
+    screen: null, x: null, y: null
+  };
+  const x = num(c.x), y = num(c.y), screen = str(c.screen);
+  const wantsPin = x != null || y != null || !!screen;
+  if (wantsPin) {
+    const inRange = x != null && y != null && x >= 0 && x <= 100 && y >= 0 && y <= 100;
+    if (!inRange) warn(where + ': a pinned spot needs "x" and "y" between 0 and 100. It is shown as a general comment.');
+    else if (design.type === 'screens' && !design.byId.has(screen)) warn(where + ': "' + screen + '" is not a screen id. It is shown as a general comment.');
+    else { out.x = x; out.y = y; out.screen = design.type === 'screens' ? screen : null; }
+  }
+  return out;
+}
+
+/* ================= saved changes (this browser only) ================= */
+const store = {
+  key: '', ok: true, data: null,
+  init(projectName) {
+    this.key = 'design-review:' + projectName;
+    this.data = { v: 1, role: null, names: {}, updates: {} };
+    try {
+      const saved = JSON.parse(localStorage.getItem(this.key) || 'null');
+      if (saved && typeof saved === 'object') {
+        if (saved.role === 'designer' || saved.role === 'stakeholder') this.data.role = saved.role;
+        if (saved.names && typeof saved.names === 'object') this.data.names = { ux: str(saved.names.ux), stakeholder: str(saved.names.stakeholder) };
+        if (saved.updates && typeof saved.updates === 'object') {
+          Object.keys(saved.updates).forEach(k => { this.data.updates[k] = cleanEntry(saved.updates[k]); });
+        }
+      }
+    } catch (e) { this.ok = false; }
+  },
+  save() {
+    try { localStorage.setItem(this.key, JSON.stringify(this.data)); this.ok = true; }
+    catch (e) { this.ok = false; }
+  },
+  reset() { this.data.updates = {}; this.save(); },
+  entry(key) { return this.data.updates[key] || null; },
+  writable(key) { return this.data.updates[key] || (this.data.updates[key] = { posted: { ux: [], stakeholder: [] }, edits: {} }); }
+};
+
+function cleanEntry(e) {
+  const out = { posted: { ux: [], stakeholder: [] }, edits: {} };
+  if (!e || typeof e !== 'object') return out;
+  ['ux', 'stakeholder'].forEach(tab => {
+    const list = e.posted && Array.isArray(e.posted[tab]) ? e.posted[tab] : [];
+    out.posted[tab] = list.filter(c => c && typeof c.id === 'string' && typeof c.text === 'string' && c.text.trim()).map(c => ({
+      id: c.id, text: c.text, author: str(c.author) || 'Unknown', role: TABS[tab].role, date: str(c.date),
+      category: CATEGORIES.includes(c.category) ? c.category : 'General', status: 'open', resolvedIn: null, dismissed: false,
+      screen: typeof c.screen === 'string' ? c.screen : null, x: num(c.x), y: num(c.y), posted: true
+    }));
+  });
+  if (e.edits && typeof e.edits === 'object') {
+    Object.keys(e.edits).forEach(id => {
+      const src = e.edits[id] || {}, edit = {};
+      if (STATUSES[src.status]) { edit.status = src.status; edit.resolvedIn = src.status === 'resolved' ? (str(src.resolvedIn) || null) : null; }
+      if (typeof src.dismissed === 'boolean') edit.dismissed = src.dismissed;
+      out.edits[id] = edit;
+    });
+  }
+  return out;
+}
+
+/* ================= state ================= */
+let CONFIG = null;
+const state = {
+  role: 'designer', updateKey: '', menu: false,
+  panel: false, tab: 'ux', filter: 'All', selected: null, showDismissed: false, formOpen: !NARROW.matches, posted: false, confirmReset: false,
+  picking: false, peek: false, toast: '',
+  current: null, history: [],
+  forms: { ux: newForm(), stakeholder: newForm() }
+};
+function newForm() { return { name: '', text: '', category: 'General', type: 'general', screen: null, x: null, y: null }; }
+
+const update = () => CONFIG.updates.find(u => u.key === state.updateKey) || CONFIG.updates[0];
+const isLatest = u => u === CONFIG.updates[0];
+const dateLabel = u => (isLatest(u) ? 'Last update: ' : 'Update: ') + (fmtDate(u.date) || 'undated');
+const form = () => state.forms[state.tab];
+const canPost = () => TABS[state.tab].viewer === state.role;
+const isScreens = () => CONFIG.design.type === 'screens';
+const covered = () => state.panel && !state.peek && NARROW.matches;
+
+function isPinned(c) {
+  if (typeof c.x !== 'number' || typeof c.y !== 'number') return false;
+  return isScreens() ? CONFIG.design.byId.has(c.screen) : true;
+}
+/* Config comments plus the ones posted in this browser, with saved status and dismissal applied. */
+function allComments(tab) {
+  const u = update(), saved = store.entry(u.key);
+  const posted = saved ? saved.posted[tab] : [], edits = saved ? saved.edits : {};
+  return posted.concat(u.comments[tab]).map(c => Object.assign({}, c, edits[c.id] || {}));
+}
+const liveComments = tab => allComments(tab).filter(c => !c.dismissed);
+/* Pinned comments get a number, counted per tab in list order. */
+function numbered(tab) {
+  let n = 0;
+  return liveComments(tab).map(c => { c.pinned = isPinned(c); c.n = c.pinned ? ++n : null; return c; });
+}
+const matchesFilter = c => state.filter === 'All' || c.category === state.filter;
+const shownComments = () => numbered(state.tab).filter(matchesFilter);
+function whereLabel(c) {
+  if (!isPinned(c)) return '';
+  if (!isScreens()) return 'Pinned spot';
+  const sc = CONFIG.design.byId.get(c.screen);
+  return pad(sc.index + 1) + ' · ' + sc.name;
+}
+
+/* ================= rendering ================= */
+/* Replaces a region's markup and puts keyboard focus back on the same control. */
+const FOCUS_ATTRS = ['data-tab', 'data-filter', 'data-ftype', 'data-status', 'data-dismiss', 'data-restore', 'data-jump', 'data-pin'];
+function swap(container, html) {
+  const active = document.activeElement;
+  let key = null;
+  if (active && container.contains(active)) {
+    if (active.id) key = '#' + CSS.escape(active.id);
+    else { const a = FOCUS_ATTRS.find(k => active.hasAttribute(k)); if (a) key = '[' + a + '="' + CSS.escape(active.getAttribute(a)) + '"]'; }
+  }
+  container.innerHTML = html;
+  if (key) { const el = container.querySelector(key); if (el) el.focus({ preventScroll: true }); }
+}
+
+function render() {
+  renderBar(); renderMenu(); renderStage(); renderPanel(); renderFloat();
+  document.body.classList.toggle('peek', state.peek);
+  const panel = $('#panel');
+  panel.classList.toggle('open', state.panel);
+  panel.inert = !state.panel || (state.peek && NARROW.matches);
+  $('#bar').inert = covered();
+  $('#stage').inert = covered();
+}
+
+function renderBar() {
+  const u = update();
+  $('#brand').textContent = CONFIG.project.name;
+  const sel = $('#update-select');
+  sel.innerHTML = CONFIG.updates.map(x => '<option value="' + esc(x.key) + '">' + esc(isLatest(x) ? dateLabel(x) : (fmtDate(x.date) || 'Undated update')) + '</option>').join('');
+  sel.value = u.key;
+  document.querySelectorAll('#bar [data-role]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.role === state.role)));
+  const count = liveComments('ux').length + liveComments('stakeholder').length;
+  const btn = $('#comments-btn'), badge = $('#comments-badge');
+  btn.setAttribute('aria-expanded', String(state.panel));
+  btn.setAttribute('aria-label', 'Comments (' + count + ')');
+  badge.textContent = count; badge.hidden = !count;
+  $('#changes-btn').setAttribute('aria-expanded', String(state.menu));
+}
+
+function renderMenu() {
+  const menu = $('#changes-menu'), u = update();
+  menu.hidden = !state.menu;
+  if (!state.menu) return;
+  const items = u.changes.map(c => {
+    const sc = c.screen && isScreens() ? CONFIG.design.byId.get(c.screen) : null;
+    const where = sc ? pad(sc.index + 1) + ' · ' + sc.name : c.screen;
+    return '<li>' + (sc
+      ? '<button type="button" class="change" data-goto="' + esc(sc.id) + '"><span>' + esc(c.text) + '</span><span class="where">' + esc(where) + '</span></button>'
+      : '<div class="change"><span>' + esc(c.text) + '</span>' + (where ? '<span class="where">' + esc(where) + '</span>' : '') + '</div>') + '</li>';
+  }).join('');
+  swap(menu, '<h3>What changed · ' + esc(fmtDate(u.date) || 'undated') + '</h3>' + (items ? '<ul>' + items + '</ul>' : '<p class="none">Nothing listed for this update.</p>'));
+  positionMenu();
+}
+function positionMenu() {
+  const menu = $('#changes-menu'), b = $('#changes-btn').getBoundingClientRect();
+  menu.style.top = Math.round(b.bottom + 6) + 'px';
+  menu.style.left = Math.round(Math.max(12, Math.min(b.left, window.innerWidth - menu.offsetWidth - 12))) + 'px';
+}
+
+/* The stage skeleton is built once, so an embedded prototype is never reloaded by a re-render. */
+let shownScreen = null;
+function buildStage() {
+  const inner = $('#stage-inner'), d = CONFIG.design;
+  const head = '<header class="head" id="head"></header><div id="warn"></div>';
+  if (isScreens()) {
+    inner.className = 'stage-inner';
+    inner.innerHTML = head +
+      '<nav class="flows" id="flows" aria-label="Sub-flows">' +
+        d.flows.map((f, i) => '<button type="button" class="chip" data-flow="' + i + '">' + esc(f.name) + '</button>').join('') +
+      '</nav>' +
+      '<div class="crumb" id="crumb"></div>' +
+      '<div class="proto-nav">' +
+        '<button type="button" class="btn" id="nav-back">← Back</button>' +
+        '<button type="button" class="btn" id="nav-next">Next →</button>' +
+        '<span class="spacer"></span>' +
+        '<button type="button" class="btn quiet" id="nav-restart">Restart</button>' +
+      '</div>' +
+      '<figure class="screen" id="screen"></figure>';
+  } else {
+    inner.className = 'stage-inner embed';
+    $('#stage').classList.add('embed');
+    inner.innerHTML = head +
+      '<div class="frame" id="frame">' +
+        '<iframe id="design-frame" title="' + esc(CONFIG.project.name) + ' design" src="' + esc(d.src) + '"></iframe>' +
+        '<div class="pins" id="pins"></div>' +
+        '<div class="capture" id="capture" hidden></div>' +
+      '</div>';
+  }
+}
+
+function renderStage() {
+  const u = update(), d = CONFIG.design, p = CONFIG.project;
+  $('#head').innerHTML =
+    '<h1>' + esc(p.name) + '</h1>' +
+    (p.description ? '<p class="desc">' + esc(p.description) + '</p>' : '') +
+    '<div class="meta"><span class="date">' + esc(dateLabel(u)) + '</span>' +
+    (CONFIG.team.length ? '<ul class="team" aria-label="Reviewers">' + CONFIG.team.map(m => '<li>' + esc(m.name) + ' <span class="pill ' + (m.role === 'UX' ? 'ux' : 'stake') + '">' + m.role + '</span></li>').join('') + '</ul>' : '') +
+    '</div>';
+  const warnEl = $('#warn'), showWarn = state.role === 'designer' && CONFIG.warnings.length;
+  if (showWarn && !warnEl.firstChild) {
+    warnEl.innerHTML = '<details class="warn"><summary>' + CONFIG.warnings.length + (CONFIG.warnings.length === 1 ? ' thing' : ' things') + ' to check in the config</summary><ul>' +
+      CONFIG.warnings.map(w => '<li>' + esc(w) + '</li>').join('') + '</ul></details>';
+  }
+  warnEl.hidden = !showWarn;
+
+  if (isScreens()) {
+    const sc = d.byId.get(state.current), i = sc.index;
+    document.querySelectorAll('#flows .chip').forEach((chip, fi) => {
+      if (d.flows[fi] === sc.flow) chip.setAttribute('aria-current', 'true'); else chip.removeAttribute('aria-current');
+    });
+    $('#crumb').innerHTML = '<span>' + esc(p.name) + '</span><span class="sep" aria-hidden="true">›</span><span>' + esc(sc.flow.name) +
+      '</span><span class="sep" aria-hidden="true">›</span><b>Step ' + (i + 1) + ' of ' + d.screens.length + '</b>';
+    $('#nav-back').disabled = !(state.history.length || i > 0);
+    $('#nav-next').disabled = i >= d.screens.length - 1;
+    $('#nav-restart').disabled = i === 0 && !state.history.length;
+    if (shownScreen !== sc.id) renderScreen(sc);
+    $('#shot').classList.toggle('picking', state.picking);
+  } else {
+    $('#capture').hidden = !state.picking;
+  }
+  renderPins();
+}
+
+function renderScreen(sc) {
+  shownScreen = sc.id;
+  const fig = $('#screen');
+  fig.style.maxWidth = sc.width ? sc.width + 'px' : '';
+  fig.innerHTML =
+    '<figcaption class="screen-cap"><span class="step">' + pad(sc.index + 1) + '</span><span class="name">' + esc(sc.name) + '</span></figcaption>' +
+    '<div class="shot" id="shot">' +
+      (sc.image ? '<img src="' + esc(sc.image) + '" alt="' + esc(sc.name) + '"' + (sc.width ? ' width="' + sc.width + '" height="' + sc.height + '"' : '') + ' draggable="false">' : '') +
+      '<div class="missing"' + (sc.image ? ' hidden' : '') + '>No image for this screen yet' + (sc.imagePath ? ': ' + esc(sc.imagePath) : '') + '</div>' +
+      '<div class="hots" id="hots"></div><div class="pins" id="pins"></div>' +
+    '</div>';
+  const img = $('img', fig);
+  if (img) {
+    img.addEventListener('error', () => {
+      img.hidden = true;
+      const miss = $('.missing', fig);
+      miss.textContent = 'Image not found: ' + sc.imagePath;
+      if (sc.width) miss.style.aspectRatio = sc.width + ' / ' + sc.height;
+      miss.hidden = false;
+    });
+    img.addEventListener('load', () => {
+      if (sc.width || !img.naturalWidth) return;
+      sc.width = img.naturalWidth; sc.height = img.naturalHeight;
+      if (shownScreen === sc.id) { fig.style.maxWidth = sc.width + 'px'; renderHotspots(sc); }
+    });
+  }
+  renderHotspots(sc);
+  // warm the cache for the screens one click away
+  const d = CONFIG.design, near = sc.hotspots.map(h => d.byId.get(h.target));
+  if (d.screens[sc.index + 1]) near.push(d.screens[sc.index + 1]);
+  near.forEach(s => { if (s && s.image && !s.warmed) { s.warmed = true; new Image().src = s.image; } });
+}
+
+function renderHotspots(sc) {
+  $('#hots').innerHTML = !sc.width ? '' : sc.hotspots.map(h =>
+    '<button type="button" class="hot" data-target="' + esc(h.target) + '" aria-label="' + esc(h.label) + '" title="' + esc(h.label) + '" style="left:' + pct(h.x / sc.width) +
+    ';top:' + pct(h.y / sc.height) + ';width:' + pct(h.width / sc.width) + ';height:' + pct(h.height / sc.height) + '"></button>').join('');
+}
+
+/* Markers show while the comments panel is open, for the tab and filter in view. */
+function renderPins() {
+  const layer = $('#pins');
+  if (!layer) return;
+  let html = '';
+  if (state.panel) {
+    shownComments().forEach(c => {
+      if (!c.pinned || (isScreens() && c.screen !== state.current)) return;
+      const on = c.id === state.selected;
+      html += '<button type="button" class="pin' + (on ? ' on' : '') + '" data-pin="' + esc(c.id) + '" aria-pressed="' + on + '" aria-label="Comment ' + c.n + ' by ' + esc(c.author) +
+        '" style="left:' + c.x + '%;top:' + c.y + '%">' + c.n + '</button>';
+    });
+    const f = form();
+    if (canPost() && f.type === 'spot' && f.x != null && (!isScreens() || f.screen === state.current)) {
+      html += '<span class="pin draft" aria-hidden="true" style="left:' + f.x + '%;top:' + f.y + '%">+</span>';
+    }
+  }
+  swap(layer, html);
+}
+
+function renderFloat() {
+  const el = $('#float');
+  let html = '';
+  if (state.picking) html = '<span>' + (NARROW.matches ? 'Tap' : 'Click') + ' the spot your comment is about</span><button type="button" data-float="cancel">Cancel</button>';
+  else if (state.peek && state.panel) html = '<span>Showing the marked spot</span><button type="button" data-float="back">Back to comments</button>';
+  else if (state.toast) html = '<span>' + esc(state.toast) + '</span>';
+  el.classList.toggle('plain', !state.picking && !(state.peek && state.panel));
+  el.innerHTML = html;
+  el.hidden = !html;
+}
+let toastTimer = 0;
+function toast(msg) {
+  state.toast = msg; renderFloat();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { state.toast = ''; renderFloat(); }, 2600);
+}
+
+function renderPanel() {
+  const inner = $('#panel-inner');
+  if (!state.panel) return; // the old content stays in place while the panel slides shut
+  const u = update(), tab = state.tab, designer = state.role === 'designer';
+  const counts = { ux: liveComments('ux').length, stakeholder: liveComments('stakeholder').length };
+  const live = numbered(tab), list = live.filter(matchesFilter);
+  const dismissed = designer ? allComments(tab).filter(c => c.dismissed && matchesFilter(c)) : [];
+  const oldBody = $('.panel-body', inner), scroll = oldBody ? oldBody.scrollTop : 0;
+  const other = tab === 'ux' ? 'stakeholder' : 'ux';
+
+  swap(inner,
+    '<div class="panel-head">' +
+      '<div class="grow"><h2>Comments</h2><p class="sub">' + esc(dateLabel(u)) + ' · ' + (designer ? 'Designer' : 'Stakeholder') + ' view</p></div>' +
+      '<button type="button" class="btn small" id="copy-btn" title="Copy the open comments of this update as a Markdown list">Copy</button>' +
+      '<button type="button" class="x" id="panel-close" aria-label="Close comments">✕</button>' +
+    '</div>' +
+    '<div class="tabs" role="tablist" aria-label="Comment lists">' +
+      Object.keys(TABS).map(k => '<button type="button" role="tab" id="tab-' + k + '" data-tab="' + k + '" aria-selected="' + (k === tab) + '" aria-controls="tabpanel" tabindex="' + (k === tab ? 0 : -1) + '">' +
+        TABS[k].label + ' <span class="count">' + counts[k] + '</span></button>').join('') +
+    '</div>' +
+    '<div class="filters" role="group" aria-label="Filter by category">' +
+      ['All'].concat(CATEGORIES).map(c => '<button type="button" class="chip" data-filter="' + c + '" aria-pressed="' + (state.filter === c) + '">' + c + '</button>').join('') +
+    '</div>' +
+    '<div class="panel-body" id="tabpanel" role="tabpanel" aria-labelledby="tab-' + tab + '" tabindex="-1">' +
+      (list.length ? list.map(c => commentHtml(c, false)).join('') : '<p class="empty">' + (live.length ? 'No comments in this category.' : TABS[tab].empty) + '</p>') +
+      (dismissed.length ? '<details class="dismissed"' + (state.showDismissed ? ' open' : '') + '><summary>Dismissed (' + dismissed.length + ')</summary><div class="list">' +
+        dismissed.map(c => commentHtml(c, true)).join('') + '</div></details>' : '') +
+    '</div>' +
+    (canPost() ? formHtml() : '<p class="where-note">' + (designer ? 'Your own notes go under ' : 'To leave feedback, go to ') +
+      '<button type="button" class="link" data-tab="' + other + '">' + TABS[other].label + '</button>.</p>') +
+    '<div class="panel-foot">' + (state.confirmReset
+      ? '<span role="alert">Clear the posts, status changes and dismissals saved in this browser? Comments from the config stay.</span>' +
+        '<span class="actions"><button type="button" class="link" id="reset-cancel">Keep</button><button type="button" class="btn small" id="reset-confirm">Clear</button></span>'
+      : '<span>' + (store.ok ? 'Posts, status changes and dismissals are saved in this browser only.' : 'This browser is blocking storage, so changes here will not survive a refresh.') +
+        '</span><button type="button" class="link" id="reset-btn">Reset</button>') + '</div>');
+
+  const body = $('.panel-body', inner);
+  if (body) body.scrollTop = scroll;
+  if (canPost()) {
+    const f = form();
+    $('#f-name').value = f.name; $('#f-text').value = f.text;
+    syncPost();
+  }
+}
+
+function commentHtml(c, isDismissed) {
+  const designer = state.role === 'designer';
+  const id = esc(c.id), where = whereLabel(c), pinned = !isDismissed && c.pinned;
+  const resolvedIn = c.status === 'resolved' ? 'Resolved in ' + (fmtDate(c.resolvedIn || update().date) || 'this update') : '';
+  let actions = '';
+  if (designer && isDismissed) actions = '<button type="button" class="link" data-restore="' + id + '">Restore</button>';
+  else if (designer) {
+    actions = '<select class="ctl" data-status="' + id + '" aria-label="Status of the comment by ' + esc(c.author) + '">' +
+      Object.keys(STATUSES).map(s => '<option value="' + s + '"' + (c.status === s ? ' selected' : '') + '>' + STATUSES[s] + '</option>').join('') + '</select>' +
+      (resolvedIn ? '<span class="resolved-in">' + esc(resolvedIn) + '</span>' : '') +
+      '<button type="button" class="link" data-dismiss="' + id + '">Dismiss</button>';
+  }
+  return '<article class="comment' + (pinned ? ' pinned' : '') + (c.id === state.selected && !isDismissed ? ' selected' : '') + (isDismissed ? ' dim' : '') + '" data-comment="' + id + '">' +
+    (pinned
+      ? '<button type="button" class="num" data-jump="' + id + '" aria-label="Show comment ' + c.n + ' on the design, ' + esc(where) + '">' + c.n + '</button>'
+      : '<span class="num general" aria-hidden="true"></span>') +
+    '<div class="c-body">' +
+      '<div class="c-meta"><b>' + esc(c.author) + '</b><span class="pill ' + (c.role === 'UX' ? 'ux' : 'stake') + '">' + c.role + '</span>' + (c.date ? '<span>' + esc(fmtDate(c.date)) + '</span>' : '') + '</div>' +
+      '<p class="c-text">' + esc(c.text) + '</p>' +
+      '<div class="c-tags">' + (where ? '<span class="tag where" title="' + esc(where) + '">' + esc(where) + '</span>' : '') + '<span class="tag">' + esc(c.category) + '</span>' +
+        (designer ? '' : '<span class="status ' + c.status + '">' + esc(c.status === 'resolved' ? resolvedIn : STATUSES[c.status]) + '</span>') + '</div>' +
+      (actions ? '<div class="c-actions">' + actions + '</div>' : '') +
+    '</div></article>';
+}
+
+function formHtml() {
+  const tab = state.tab, t = TABS[tab], f = form(), open = state.formOpen;
+  const names = CONFIG.team.filter(m => m.role === t.role).map(m => m.name);
+  const hasSpot = f.x != null;
+  const sc = hasSpot && isScreens() ? CONFIG.design.byId.get(f.screen) : null;
+  let spot = '';
+  if (f.type === 'spot') {
+    spot = hasSpot
+      ? '<span class="tag where">' + esc(sc ? pad(sc.index + 1) + ' · ' + sc.name : 'Spot placed') + '</span><button type="button" class="link" id="pick-spot">Move</button>'
+      : '<button type="button" class="btn small" id="pick-spot">Pick a spot</button>';
+  }
+  return '<div class="cform">' +
+    '<button type="button" class="cform-toggle" id="form-toggle" aria-expanded="' + open + '" aria-controls="cform"><span>' + t.add + ' <span class="pill ' + t.pill + '">' + t.role + '</span></span>' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>' +
+    '<form id="cform" novalidate' + (open ? '' : ' hidden') + '>' +
+      '<div class="two">' +
+        '<label class="field"><span>Name</span><input id="f-name" type="text" maxlength="60" autocomplete="name" list="f-names" placeholder="Your name"></label>' +
+        '<label class="field"><span>Category</span><select id="f-cat">' + CATEGORIES.map(c => '<option' + (f.category === c ? ' selected' : '') + '>' + c + '</option>').join('') + '</select></label>' +
+      '</div>' +
+      '<datalist id="f-names">' + names.map(n => '<option value="' + esc(n) + '"></option>').join('') + '</datalist>' +
+      '<label class="field"><span>Comment</span><textarea id="f-text" rows="3" maxlength="2000" placeholder="What should change, and why?"></textarea></label>' +
+      '<div class="spot-row">' +
+        '<div class="seg" role="group" aria-label="What the comment is about">' +
+          '<button type="button" data-ftype="general" aria-pressed="' + (f.type === 'general') + '">General</button>' +
+          '<button type="button" data-ftype="spot" aria-pressed="' + (f.type === 'spot') + '">Specific spot</button>' +
+        '</div>' + spot +
+      '</div>' +
+      '<div class="foot"><button type="submit" class="btn primary" id="post-btn" disabled>Post</button><span class="note" id="post-note" role="status">' + (state.posted ? 'Posted' : '') + '</span></div>' +
+    '</form></div>';
+}
+
+function formReady() {
+  const f = form();
+  return !!(f.name.trim() && f.text.trim() && (f.type === 'general' || f.x != null));
+}
+function syncPost() { const b = $('#post-btn'); if (b) b.disabled = !formReady(); }
+
+/* ================= actions ================= */
+function cancelPick() { state.picking = false; state.peek = false; }
+
+function toggleMenu(open) {
+  state.menu = open === undefined ? !state.menu : open;
+  $('#changes-btn').setAttribute('aria-expanded', String(state.menu));
+  renderMenu();
+}
+
+function togglePanel(open) {
+  state.panel = open === undefined ? !state.panel : open;
+  state.selected = null; state.peek = false; state.picking = false; state.posted = false; state.confirmReset = false;
+  render();
+}
+
+function setRole(role) {
+  if (role !== 'designer' && role !== 'stakeholder') return;
+  state.role = role; store.data.role = role; store.save();
+  state.picking = false; state.peek = false; state.posted = false; state.confirmReset = false;
+  if (state.selected && !liveComments(state.tab).some(c => c.id === state.selected)) state.selected = null;
+  render();
+}
+
+function setTab(tab) {
+  if (!TABS[tab] || tab === state.tab) return;
+  state.tab = tab; state.selected = null; state.picking = false; state.peek = false; state.posted = false; state.showDismissed = false; state.confirmReset = false;
+  render();
+}
+
+function scrollToScreenTop() {
+  const s = $('#stage'), crumb = $('#crumb'), flows = $('#flows');
+  if (!crumb || !flows) return;
+  const target = Math.max(0, crumb.offsetTop - flows.offsetHeight - 8);
+  if (s.scrollTop > target) s.scrollTop = target;
+}
+function show(id, remember, keepScroll) {
+  const d = CONFIG.design;
+  if (!isScreens() || !d.byId.has(id) || id === state.current) return;
+  if (remember) { state.history.push(state.current); if (state.history.length > 200) state.history.shift(); }
+  state.current = id;
+  render();
+  if (!keepScroll) scrollToScreenTop();
+}
+function next() {
+  if (!isScreens()) return;
+  const d = CONFIG.design, i = d.byId.get(state.current).index;
+  if (i < d.screens.length - 1) show(d.screens[i + 1].id, true);
+}
+/* Back returns to where you came from; with nothing to return to, it steps to the previous screen. */
+function back() {
+  if (!isScreens()) return;
+  const d = CONFIG.design, i = d.byId.get(state.current).index;
+  let target = null;
+  while (state.history.length && !target) { const id = state.history.pop(); if (id !== state.current) target = id; }
+  if (!target && i > 0) target = d.screens[i - 1].id;
+  if (target) show(target, false); else render();
+}
+function restart() {
+  if (!isScreens()) return;
+  state.history = [];
+  const first = CONFIG.design.screens[0].id;
+  if (first === state.current) render(); else show(first, false);
+  $('#stage').scrollTop = 0;
+}
+
+let flashTimer = 0;
+function flashHotspots(shot) {
+  const sc = CONFIG.design.byId.get(state.current);
+  if (!sc.hotspots.length) { toast('No clickable areas on this screen. Use Next, Back or the sub-flow chips.'); return; }
+  shot.classList.remove('flash');
+  void shot.offsetWidth; // restart the animation
+  shot.classList.add('flash');
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => shot.classList.remove('flash'), 750);
+}
+
+function scrollStageTo(el) {
+  const s = $('#stage'), r = el.getBoundingClientRect(), sr = s.getBoundingClientRect();
+  const flows = $('#flows'), top = sr.top + (flows ? flows.offsetHeight : 0) + 12;
+  if (r.top >= top && r.bottom <= sr.bottom - 90) return;
+  s.scrollTo({ top: s.scrollTop + (r.top - sr.top) - sr.height / 2, behavior: REDUCED.matches ? 'auto' : 'smooth' });
+}
+function revealComment(id) {
+  const body = $('.panel-body'), el = body && body.querySelector('[data-comment="' + CSS.escape(id) + '"]');
+  if (!el) return;
+  const r = el.getBoundingClientRect(), br = body.getBoundingClientRect();
+  if (r.top < br.top) body.scrollTop += r.top - br.top - 8;
+  else if (r.bottom > br.bottom) body.scrollTop += r.bottom - br.bottom + 8;
+}
+
+/* from 'list': a comment was clicked, so show its spot. from 'pin': a marker was clicked, so show the comment. */
+function selectComment(id, from) {
+  const c = shownComments().find(x => x.id === id);
+  if (!c) return;
+  if (from === 'list' && state.selected === id) { state.selected = null; state.peek = false; render(); return; }
+  state.selected = id; state.picking = false; state.posted = false;
+  if (from === 'pin') state.peek = false;
+  if (from === 'list' && c.pinned) {
+    if (isScreens() && c.screen !== state.current) { state.history.push(state.current); state.current = c.screen; }
+    if (NARROW.matches) state.peek = true; // the panel covers a phone screen, so step aside to show the marker
+  }
+  render();
+  if (from === 'list' && c.pinned) { const pin = $('#pins [data-pin="' + CSS.escape(id) + '"]'); if (pin) scrollStageTo(pin); }
+  if (from === 'pin') revealComment(id);
+}
+
+function setEdit(id, patch) {
+  const entry = store.writable(update().key);
+  entry.edits[id] = Object.assign({}, entry.edits[id], patch);
+  store.save();
+}
+
+function startPick() {
+  state.picking = true; state.posted = false;
+  if (NARROW.matches) state.peek = true;
+  render();
+}
+function placeSpot(e, box) {
+  const r = box.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const clamp = v => Math.min(100, Math.max(0, Math.round(v * 10) / 10));
+  Object.assign(form(), { type: 'spot', screen: isScreens() ? state.current : null, x: clamp((e.clientX - r.left) / r.width * 100), y: clamp((e.clientY - r.top) / r.height * 100) });
+  state.picking = false; state.peek = false; state.formOpen = true;
+  render();
+}
+
+function postComment() {
+  if (!canPost() || !formReady()) return;
+  const f = form(), tab = state.tab, spot = f.type === 'spot';
+  const c = {
+    id: 'p-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6),
+    author: f.name.trim(), role: TABS[tab].role, date: todayIso(), text: f.text.trim(), category: f.category,
+    status: 'open', resolvedIn: null, dismissed: false, posted: true,
+    screen: spot ? f.screen : null, x: spot ? f.x : null, y: spot ? f.y : null
+  };
+  store.writable(update().key).posted[tab].unshift(c);
+  store.data.names[tab] = c.author;
+  store.save();
+  Object.assign(f, { text: '', category: 'General', type: 'general', screen: null, x: null, y: null });
+  if (state.filter !== 'All' && state.filter !== c.category) state.filter = 'All';
+  state.selected = c.id; state.picking = false; state.peek = false; state.posted = true;
+  render();
+  const body = $('.panel-body'); if (body) body.scrollTop = 0;
+}
+
+/* Reset asks first, inside the panel rather than with a browser dialog. */
+function askReset(on) {
+  state.confirmReset = on;
+  render();
+  const el = $(on ? '#reset-cancel' : '#reset-btn');
+  if (el) el.focus();
+}
+function resetSaved() {
+  store.reset();
+  state.selected = null; state.picking = false; state.peek = false; state.posted = false;
+  askReset(false);
+}
+
+/* The open comments of the selected update, both lists, as Markdown. Resolved and dismissed ones are left out. */
+function openCommentsMarkdown() {
+  const u = update();
+  const lines = ['# ' + CONFIG.project.name + ': open review comments', '', dateLabel(u), ''];
+  Object.keys(TABS).forEach(tab => {
+    const open = liveComments(tab).filter(c => c.status !== 'resolved');
+    lines.push('## ' + TABS[tab].label + ' (' + open.length + ')', '');
+    if (!open.length) lines.push('- None open');
+    open.forEach(c => {
+      const where = isPinned(c) ? (isScreens() ? CONFIG.design.byId.get(c.screen).name : 'Pinned spot') : 'General';
+      lines.push('- **' + where + '** · ' + c.category + (c.status === 'progress' ? ' · in progress' : '') + ': ' + c.text.replace(/\s*\n\s*/g, ' ') +
+        ' (' + c.author + (c.date ? ', ' + fmtDate(c.date) : '') + ')');
+    });
+    lines.push('');
+  });
+  return lines.join('\n').trimEnd() + '\n';
+}
+function copyOpenComments(btn) {
+  const md = openCommentsMarkdown();
+  const done = ok => { btn.textContent = ok ? 'Copied' : 'Copy failed'; setTimeout(() => { if (btn.isConnected) btn.textContent = 'Copy'; }, 1600); };
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = md; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove(); btn.focus(); done(ok);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(md).then(() => done(true), fallback);
+  else fallback();
+}
+
+/* ================= events ================= */
+function onStageClick(e) {
+  const t = e.target;
+  if (!isScreens()) {
+    if (t.closest('#capture')) { placeSpot(e, $('#frame')); return; }
+    const pin = t.closest('[data-pin]');
+    if (pin) selectComment(pin.dataset.pin, 'pin');
+    return;
+  }
+  const chip = t.closest('[data-flow]');
+  if (chip) { show(CONFIG.design.flows[+chip.dataset.flow].screens[0].id, true); return; }
+  if (t.closest('#nav-back')) { back(); return; }
+  if (t.closest('#nav-next')) { next(); return; }
+  if (t.closest('#nav-restart')) { restart(); return; }
+  const shot = t.closest('#shot');
+  if (!shot) return;
+  if (state.picking) { placeSpot(e, shot); return; }
+  const pin = t.closest('[data-pin]');
+  if (pin) { selectComment(pin.dataset.pin, 'pin'); return; }
+  const hot = t.closest('.hot');
+  if (hot) { show(hot.dataset.target, true); return; }
+  flashHotspots(shot);
+}
+
+function onPanelClick(e) {
+  const t = e.target;
+  let el;
+  if (t.closest('#panel-close')) { togglePanel(false); $('#comments-btn').focus(); return; }
+  if ((el = t.closest('#copy-btn'))) { copyOpenComments(el); return; }
+  if (t.closest('#reset-btn')) { askReset(true); return; }
+  if (t.closest('#reset-cancel')) { askReset(false); return; }
+  if (t.closest('#reset-confirm')) { resetSaved(); return; }
+  if ((el = t.closest('[data-tab]'))) { setTab(el.dataset.tab); return; }
+  if ((el = t.closest('[data-filter]'))) {
+    state.filter = el.dataset.filter;
+    if (state.selected && !shownComments().some(c => c.id === state.selected)) state.selected = null;
+    render(); return;
+  }
+  if ((el = t.closest('[data-dismiss]'))) {
+    setEdit(el.dataset.dismiss, { dismissed: true });
+    if (state.selected === el.dataset.dismiss) state.selected = null;
+    render(); return;
+  }
+  if ((el = t.closest('[data-restore]'))) { setEdit(el.dataset.restore, { dismissed: false }); render(); return; }
+  if (t.closest('#form-toggle')) { state.formOpen = !state.formOpen; state.picking = false; render(); return; }
+  if ((el = t.closest('[data-ftype]'))) {
+    const f = form();
+    f.type = el.dataset.ftype === 'spot' ? 'spot' : 'general';
+    if (f.type === 'general') { f.screen = null; f.x = f.y = null; state.picking = false; }
+    state.posted = false;
+    render(); return;
+  }
+  if (t.closest('#pick-spot')) { startPick(); return; }
+  const card = t.closest('.comment.pinned');
+  if (card && !t.closest('select, summary, label, button:not(.num)')) selectComment(card.dataset.comment, 'list');
+}
+
+function onPanelChange(e) {
+  const t = e.target;
+  if (t.matches('[data-status]')) {
+    const status = STATUSES[t.value] ? t.value : 'open';
+    setEdit(t.dataset.status, { status, resolvedIn: status === 'resolved' ? (update().date || null) : null });
+    render();
+  } else if (t.id === 'f-cat') form().category = CATEGORIES.includes(t.value) ? t.value : 'General';
+}
+function onPanelInput(e) {
+  const t = e.target;
+  if (t.id === 'f-name') form().name = t.value;
+  else if (t.id === 'f-text') form().text = t.value;
+  else return;
+  if (state.posted) { state.posted = false; const note = $('#post-note'); if (note) note.textContent = ''; }
+  syncPost();
+}
+
+function onKey(e) {
+  if (e.key === 'Escape') {
+    if (state.picking) { cancelPick(); render(); }
+    else if (state.menu) { toggleMenu(false); $('#changes-btn').focus(); }
+    else if (state.peek) { state.peek = false; render(); }
+    return;
+  }
+  if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  const t = e.target instanceof Element ? e.target : null;
+  if (t && t.closest('[role="tablist"]')) { // arrows move between the two comment lists
+    e.preventDefault();
+    setTab(state.tab === 'ux' ? 'stakeholder' : 'ux');
+    const tabBtn = $('#tab-' + state.tab); if (tabBtn) tabBtn.focus();
+    return;
+  }
+  if (t && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
+  if (!isScreens() || covered()) return;
+  e.preventDefault();
+  if (e.key === 'ArrowRight') next(); else back();
+}
+
+function bind() {
+  $('#update-select').addEventListener('change', e => {
+    state.updateKey = e.target.value;
+    state.selected = null; state.picking = false; state.peek = false; state.posted = false; state.showDismissed = false; state.confirmReset = false;
+    render();
+  });
+  $('#changes-btn').addEventListener('click', () => toggleMenu());
+  $('#changes-menu').addEventListener('click', e => {
+    const b = e.target.closest('[data-goto]');
+    if (!b) return;
+    toggleMenu(false);
+    show(b.dataset.goto, true);
+  });
+  $('#bar').addEventListener('click', e => { const b = e.target.closest('[data-role]'); if (b) setRole(b.dataset.role); });
+  $('#comments-btn').addEventListener('click', () => togglePanel());
+  $('#stage').addEventListener('click', onStageClick);
+  $('#float').addEventListener('click', e => {
+    const b = e.target.closest('[data-float]');
+    if (!b) return;
+    if (b.dataset.float === 'cancel') cancelPick(); else state.peek = false;
+    render();
+  });
+  const inner = $('#panel-inner');
+  inner.addEventListener('click', onPanelClick);
+  inner.addEventListener('change', onPanelChange);
+  inner.addEventListener('input', onPanelInput);
+  inner.addEventListener('submit', e => { e.preventDefault(); postComment(); });
+  inner.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('details.dismissed')) state.showDismissed = e.target.open; }, true);
+  document.addEventListener('keydown', onKey);
+  document.addEventListener('click', e => { if (state.menu && !e.target.closest('#changes-menu, #changes-btn')) toggleMenu(false); });
+  window.addEventListener('resize', () => { if (state.menu) positionMenu(); });
+  NARROW.addEventListener('change', () => { state.peek = false; render(); });
+}
+
+/* ================= start-up ================= */
+function bootShow(title, bodyHtml, offerFile) {
+  $('#app').hidden = true;
+  $('#boot').hidden = false;
+  $('#boot-title').textContent = title;
+  $('#boot-body').innerHTML = bodyHtml || '';
+  $('#boot-pick').hidden = !offerFile;
+}
+
+function start(text, base, fileLabel) {
+  let config;
+  try { config = normalizeConfig(parseConfig(text), base); }
+  catch (err) {
+    if (!(err instanceof ConfigError)) console.error(err);
+    bootShow(fileLabel + ' needs a fix', '<p>' + esc(err.message || String(err)) + '</p><p>Fix the file and refresh this page.</p>', location.protocol === 'file:');
+    return;
+  }
+  CONFIG = config;
+  store.init(config.project.name);
+  const asked = (PARAMS.get('role') || '').toLowerCase();
+  state.role = asked === 'designer' || asked === 'stakeholder' ? asked : (store.data.role || 'designer');
+  state.updateKey = config.updates[0].key;
+  state.forms.ux.name = store.data.names.ux || '';
+  state.forms.stakeholder.name = store.data.names.stakeholder || '';
+  if (isScreens()) state.current = config.design.screens[0].id;
+  document.title = config.project.name + ' · Design review';
+  if (config.warnings.length) console.warn('Design review config:\n- ' + config.warnings.join('\n- '));
+  buildStage();
+  bind();
+  $('#boot').hidden = true;
+  $('#app').hidden = false;
+  render();
+}
+
+function boot() {
+  const picker = $('#boot-file');
+  $('#boot-choose').addEventListener('click', () => picker.click());
+  picker.addEventListener('change', () => {
+    const file = picker.files && picker.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => start(String(reader.result), location.href, file.name);
+    reader.onerror = () => bootShow('That file could not be read', '<p>Try choosing it again.</p>', true);
+    reader.readAsText(file);
+    picker.value = '';
+  });
+
+  const asked = PARAMS.get('config') || DEFAULT_CONFIG;
+  let url;
+  try { url = new URL(asked, location.href); } catch (e) { url = null; }
+  if (!url || url.origin !== location.origin || url.protocol !== location.protocol) {
+    bootShow('That config can’t be loaded', '<p>The <code>config</code> address has to point at a file on this same site, for example <code>?config=projects/checkout.config.json</code>.</p>', false);
+    return;
+  }
+  const label = url.pathname.split('/').pop() || DEFAULT_CONFIG;
+  fetch(url.href, { cache: 'no-store' })
+    .then(res => { if (!res.ok) throw new Error('The server answered ' + res.status + '.'); return res.text(); })
+    .then(text => start(text, url.href, label), err => {
+      if (location.protocol === 'file:') {
+        bootShow('Choose your config file',
+          '<p>This page was opened straight from a folder, and browsers do not let a page read other files that way.</p>' +
+          '<p>Choose <code>' + esc(label) + '</code> below. To skip this step, serve the folder instead, for example with <code>python3 -m http.server</code>, and open <code>http://localhost:8000</code>.</p>', true);
+      } else {
+        bootShow('Couldn’t load ' + label,
+          '<p>' + esc(err && err.message || String(err)) + '</p><p>Check that <code>' + esc(label) + '</code> sits next to <code>index.html</code>, then refresh.</p>', false);
+      }
+    });
+}
+
+boot();
+})();
+</script>
+</body>
+</html>
