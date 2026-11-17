@@ -1,0 +1,3 @@
+# review.config.json carries // notes. This tells GitHub to colour it as JSON with comments.
+review.config.json linguist-language=JSON-with-Comments
+*.config.json linguist-language=JSON-with-Comments

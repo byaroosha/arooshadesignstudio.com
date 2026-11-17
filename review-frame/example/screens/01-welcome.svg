@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <rect width="1440" height="900" fill="#ffffff"/>
+  <!-- top navigation -->
+  <rect width="1440" height="88" fill="#f3f4f6"/>
+  <rect x="64" y="28" width="120" height="32" rx="6" fill="#9ca3af"/>
+  <rect x="520" y="38" width="80" height="12" rx="6" fill="#d1d5db"/>
+  <rect x="640" y="38" width="80" height="12" rx="6" fill="#d1d5db"/>
+  <rect x="760" y="38" width="80" height="12" rx="6" fill="#d1d5db"/>
+  <rect x="1256" y="24" width="120" height="40" rx="8" fill="#ffffff" stroke="#6b7280" stroke-width="2"/>
+  <text x="1316" y="50" text-anchor="middle" font-size="15" font-weight="600" fill="#374151">Sign in</text>
+  <!-- hero -->
+  <text x="120" y="296" font-size="56" font-weight="700" fill="#111827">Welcome</text>
+  <rect x="120" y="340" width="520" height="16" rx="8" fill="#d1d5db"/>
+  <rect x="120" y="372" width="440" height="16" rx="8" fill="#d1d5db"/>
+  <rect x="120" y="440" width="220" height="56" rx="10" fill="#374151"/>
+  <text x="230" y="475" text-anchor="middle" font-size="18" font-weight="600" fill="#ffffff">Get started</text>
+  <!-- image placeholder -->
+  <rect x="780" y="180" width="540" height="380" rx="12" fill="#f3f4f6" stroke="#d1d5db" stroke-width="2"/>
+  <path d="M780 180 L1320 560 M1320 180 L780 560" stroke="#d1d5db" stroke-width="2"/>
+  <!-- feature cards -->
+  <g fill="#f3f4f6" stroke="#e5e7eb" stroke-width="2">
+    <rect x="120" y="660" width="360" height="160" rx="12"/>
+    <rect x="540" y="660" width="360" height="160" rx="12"/>
+    <rect x="960" y="660" width="360" height="160" rx="12"/>
+  </g>
+  <g fill="#d1d5db">
+    <rect x="148" y="692" width="160" height="14" rx="7"/><rect x="148" y="724" width="280" height="10" rx="5"/><rect x="148" y="746" width="240" height="10" rx="5"/>
+    <rect x="568" y="692" width="160" height="14" rx="7"/><rect x="568" y="724" width="280" height="10" rx="5"/><rect x="568" y="746" width="240" height="10" rx="5"/>
+    <rect x="988" y="692" width="160" height="14" rx="7"/><rect x="988" y="724" width="280" height="10" rx="5"/><rect x="988" y="746" width="240" height="10" rx="5"/>
+  </g>
+  <text x="1376" y="876" text-anchor="end" font-size="13" fill="#9ca3af">Placeholder screen 1 of 3 · 1440 × 900</text>
+</svg>
