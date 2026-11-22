@@ -1,0 +1,137 @@
+// Q - Peek config. Notes with // or /* */ and trailing commas are allowed.
+// Image and code paths are relative to this file.
+{
+  "project": {
+    "name": "Acme Wallet",
+    "description": "Sign-in and dashboard for the Acme Wallet mobile app. Placeholder screens: replace them with your own exports."
+  },
+
+  // Listed in the header and offered as name suggestions in the comment form.
+  "team": [
+    { "name": "Maya Chen", "role": "UX" },
+    { "name": "Jon Ruiz", "role": "UX" },
+    { "name": "Priya Nair", "role": "Stakeholder" },
+    { "name": "Tom Becker", "role": "Stakeholder" },
+  ],
+
+  // --- Design: pick ONE type -------------------------------------------------
+  // "screens": exported images as a click-through prototype. Hotspots are in
+  // image pixels (x, y, width, height from the top left); target is a screen id.
+  "design": {
+    "type": "screens",
+    "flows": [
+      {
+        "name": "Sign in",
+        "screens": [
+          {
+            "id": "welcome", "name": "Welcome",
+            "image": "example/screens/welcome.svg", "width": 390, "height": 844,
+            "hotspots": [
+              { "x": 32, "y": 700, "width": 326, "height": 52, "target": "sign-in", "label": "Sign in" }
+            ]
+          },
+          {
+            "id": "sign-in", "name": "Sign in form",
+            "image": "example/screens/sign-in.svg", "width": 390, "height": 844,
+            "hotspots": [
+              { "x": 16, "y": 60, "width": 48, "height": 48, "target": "welcome", "label": "Back" },
+              { "x": 32, "y": 480, "width": 326, "height": 52, "target": "dashboard", "label": "Sign in" }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Dashboard",
+        "screens": [
+          {
+            "id": "dashboard", "name": "Dashboard",
+            "image": "example/screens/dashboard.svg", "width": 390, "height": 844,
+            "hotspots": [
+              { "x": 316, "y": 60, "width": 48, "height": 48, "target": "welcome", "label": "Sign out" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+  // To try another type, uncomment ONE of these. If a key appears twice the
+  // last one wins, so there is no need to remove the "screens" block above.
+  //
+  // "design": { "type": "figma", "url": "https://www.figma.com/design/YOUR_FILE_KEY/Your-file?node-id=0-1" },
+  //
+  // "design": { "type": "code", "path": "example/prototype.html" },
+
+  // Newest first.
+  "updates": [
+    {
+      "date": "2026-11-20",
+      "changes": [
+        { "text": "Sign in button is now full width with a larger tap target", "screen": "sign-in" },
+        { "text": "New balance card on the dashboard", "screen": "dashboard" },
+        { "text": "Shorter welcome copy", "screen": "welcome" },
+        { "text": "Colour tokens renamed to match the design system" }
+      ],
+      "comments": {
+        "ux": [
+          {
+            "id": "u1-ux-1", "author": "Maya Chen", "role": "UX", "date": "2026-11-19",
+            "text": "The password field has no visible label once it is filled. Keep the label above the field.",
+            "category": "Accessibility", "status": "open",
+            "screen": "sign-in", "x": 50, "y": 43
+          },
+          {
+            "id": "u1-ux-2", "author": "Jon Ruiz", "role": "UX", "date": "2026-11-19",
+            "text": "Balance card uses a raw hex colour instead of the primary token.",
+            "category": "Design system", "status": "progress",
+            "screen": "dashboard", "x": 50, "y": 26
+          }
+        ],
+        "stakeholder": [
+          {
+            "id": "u1-st-1", "author": "Priya Nair", "role": "Stakeholder", "date": "2026-11-20",
+            "text": "Can we show the last sign-in time on the dashboard for trust?",
+            "category": "Content", "status": "open",
+            "screen": "dashboard", "x": 25, "y": 12
+          },
+          {
+            "id": "u1-st-2", "author": "Tom Becker", "role": "Stakeholder", "date": "2026-11-20",
+            "text": "Overall the flow is clear. Is a failed sign-in covered in a later update?",
+            "category": "Flow", "status": "open"
+          }
+        ]
+      }
+    },
+    {
+      "date": "2026-11-13",
+      "changes": [
+        { "text": "First click-through of the sign-in flow", "screen": "welcome" },
+        { "text": "Dashboard layout drafted", "screen": "dashboard" }
+      ],
+      "comments": {
+        "ux": [
+          {
+            "id": "u0-ux-1", "author": "Maya Chen", "role": "UX", "date": "2026-11-12",
+            "text": "The Sign in button is too close to the screen edge.",
+            "category": "Design system", "status": "resolved", "resolvedIn": "2026-11-20",
+            "screen": "sign-in", "x": 50, "y": 60
+          }
+        ],
+        "stakeholder": [
+          {
+            "id": "u0-st-1", "author": "Priya Nair", "role": "Stakeholder", "date": "2026-11-13",
+            "text": "Please add a way to create an account from the welcome screen.",
+            "category": "Flow", "status": "progress",
+            "screen": "welcome", "x": 50, "y": 91
+          },
+          {
+            "id": "u0-st-2", "author": "Tom Becker", "role": "Stakeholder", "date": "2026-11-13",
+            "text": "Is the logo final? It looks like a placeholder.",
+            "category": "General", "status": "open", "dismissed": true,
+            "screen": "welcome", "x": 50, "y": 30
+          }
+        ]
+      }
+    }
+  ]
+}

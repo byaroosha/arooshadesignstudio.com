@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" font-family="Helvetica, Arial, sans-serif">
+  <rect width="390" height="844" fill="#f4f6fb"/>
+  <rect x="0" y="0" width="390" height="44" fill="#e3e7f1"/>
+  <text x="24" y="28" font-size="13" fill="#4a5265">9:41</text>
+  <circle cx="195" cy="250" r="52" fill="#c9d3ee"/>
+  <text x="195" y="262" font-size="34" font-weight="700" fill="#2b3a67" text-anchor="middle">A</text>
+  <text x="195" y="372" font-size="26" font-weight="700" fill="#1c2233" text-anchor="middle">Welcome to Acme Wallet</text>
+  <text x="195" y="404" font-size="15" fill="#4a5265" text-anchor="middle">Placeholder screen 1 of 3</text>
+  <text x="195" y="428" font-size="15" fill="#4a5265" text-anchor="middle">Replace this SVG with your export</text>
+  <rect x="32" y="700" width="326" height="52" rx="12" fill="#2f5fd0"/>
+  <text x="195" y="732" font-size="17" font-weight="600" fill="#ffffff" text-anchor="middle">Sign in</text>
+  <rect x="33" y="765" width="324" height="50" rx="12" fill="none" stroke="#2f5fd0" stroke-width="2"/>
+  <text x="195" y="796" font-size="17" font-weight="600" fill="#2f5fd0" text-anchor="middle">Create account</text>
+</svg>
