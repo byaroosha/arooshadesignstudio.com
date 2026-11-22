@@ -80,7 +80,19 @@ A local HTML page, relative to the config, shown in an iframe. It must be on the
 
 To try another type, uncomment the `figma` or `code` line in the shipped config. If a key appears twice the last one wins, so the `screens` block can stay.
 
-### Comments
+### Top bar
+
+Project name, **Update** dropdown (the version history: newest is "Last update: …"), **What changed**, then the preview-size controls, then the **Designer / Stakeholder** switch and **Comments** (with a count).
+
+Preview size, modelled on a design tool's toolbar:
+
+- **Device**: Auto, Phone (402×874), Tablet (834×1194), Desktop (1440×900); editing a number shows Custom. **⇄** swaps width and height.
+- **Fit**: on = scale down to the available space; off = actual size (the design area scrolls sideways inside its own box). The percentage is the current scale.
+- `screens`: the width caps how wide the screen is shown. A screen is never shown wider than its own `width`, and its height follows the image, so the height field and ⇄ are disabled.
+- `figma` / `code`: the frame becomes exactly width × height and is scaled to fit. Pins are percent of the frame, so they stay in place.
+- Hidden on phones (the phone is the device). Not remembered between visits.
+
+## Comments
 
 ```jsonc
 { "id": "u1-ux-1", "author": "Maya Chen", "role": "UX", "date": "2026-11-19",
